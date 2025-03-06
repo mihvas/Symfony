@@ -1,0 +1,18 @@
+FROM php:8.2-fpm
+
+# Устанавливаем системные пакеты, расширения PHP и т.д.
+RUN apt-get update && apt-get install -y \
+    git \
+    unzip \
+    libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+
+# Установка Composer (если нужно внутри контейнера)
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
+    && php -r "unlink('composer-setup.php');"
+
+WORKDIR /var/www/html
+
+# Запускаем php-fpm
+CMD ["php-fpm"]
