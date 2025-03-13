@@ -8,11 +8,6 @@ services:
     container_name: php_container
     volumes:
       - ./:/var/www/html
-    # Порты для php напрямую обычно не выставляют наружу,
-    # но иногда тебе может понадобиться xdebug, тогда добавляют соответствующие настройки
-    # environment:
-    #   XDEBUG_MODE: debug
-    #   XDEBUG_CONFIG: remote_host=host.docker.internal
 
   nginx:
     image: nginx:latest
@@ -29,12 +24,11 @@ services:
     image: postgres:latest
     container_name: db_container
     environment:
-      - POSTGRES_USER=symfony
-      - POSTGRES_PASSWORD=symfony
-      - POSTGRES_DB=symfony
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
-      - "5432:5432"
-    # Если хочешь чтобы данные сохранялись (не пропадали при пересоздании контейнера):
+      - "${DB_PORT}:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
 
