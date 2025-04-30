@@ -1,0 +1,3 @@
+parameters:
+  paths.house_csv: '%kernel.project_dir%/tests/data/test_house.csv'
+  paths.booking_csv: '%kernel.project_dir%/tests/data/test_booking.csv'
