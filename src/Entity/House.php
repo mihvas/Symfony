@@ -24,12 +24,15 @@ class House
 
     #[ORM\Column(type: 'int', nullable: true)]
     private int $price;
+    #[ORM\Column(type: 'bool', nullable: true)]
+    private bool $free;
 
     public function __construct(
         string $type,
         int $beds,
         string $address,
-        int    $price,
+        int $price,
+        bool $free = true,
         int $id = -1
     )
     {
@@ -38,6 +41,7 @@ class House
         $this->beds = $beds;
         $this->address = $address;
         $this->price = $price;
+        $this->free = $free;
     }
 
     public function getId(): int
@@ -66,6 +70,11 @@ class House
         return $this->price;
     }
 
+    public function getFree(): bool
+    {
+        return $this->free;
+    }
+
     public function setId(int $id): void
     {
         $this->id = $id;
@@ -86,6 +95,11 @@ class House
         $this->beds = $beds;
     }
 
+    public function setFree(bool $free): void
+    {
+        $this->free = $free;
+    }
+
     public function toArray(): array
     {
         return [
@@ -93,7 +107,9 @@ class House
             'type' => $this->type,
             'beds' => $this->beds,
             'address' => $this->address,
-            'price' => $this->price
+            'price' => $this->price,
+            'free' => $this->free,
+
         ];
     }
 

@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 class HouseRepository
 {
     private string $filePath;
-    private array $header = ['id', 'type', 'beds', 'address', 'price'];
+    private array $header = ['id', 'type', 'beds', 'address', 'price', 'free'];
 
     public function __construct(ParameterBagInterface $params)
     {
@@ -36,6 +36,7 @@ class HouseRepository
                     beds: (int)$data[2],
                     address: (string)$data[3],
                     price: (int)$data[4],
+                    free: (bool)$data[5],
                     id: (int)$data[0]
                 );
             }
@@ -44,6 +45,14 @@ class HouseRepository
         }
         return $houses;
     }
+
+    public function findAllFree(): array
+    {
+        $houses = $this->findAll();
+
+        return array_filter($houses, fn(House $house) => $house->getFree());
+    }
+
 
     public function findById(int $id): ?House
     {
@@ -171,11 +180,14 @@ class HouseRepository
                 $house->getType(),
                 $house->getBeds(),
                 $house->getAddress(),
-                $house->getPrice()
+                $house->getPrice(),
+                $house->getFree(),
 
             ]);
         }
         fclose($handle);
         return $id - 1;
     }
+
+
 }

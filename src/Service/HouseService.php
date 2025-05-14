@@ -22,7 +22,7 @@ class HouseService
 
     public function updateHouse(array $data): int
     {
-        $house = new House($data['type'], $data['beds'], $data['address'], $data['price']);
+        $house = new House($data['type'], $data['beds'], $data['address'], $data['price'],$data['free']);
         return $this->repository->save($house);
     }
 
@@ -34,6 +34,11 @@ class HouseService
     public function getAllHouses(): array
     {
         return array_map(fn(House $house) => $house->toArray(), $this->repository->findAll());
+    }
+
+    public function getAllFreeHouses(): array
+    {
+        return array_map(fn(House $house) => $house->toArray(), $this->repository->findAllFree());
     }
 
     public function findHouseById(int $id): ?array

@@ -25,7 +25,12 @@ class HouseController extends AbstractController
         $houses = $this->houseService->getAllHouses();
         return $this->json($houses);
     }
-
+    #[Route('/get_free', name: 'get_free', methods: ['GET'])]
+    public function getAllFreeHouses(): JsonResponse
+    {
+        $freeHouses = $this->houseService->getAllFreeHouses();
+        return $this->json($freeHouses);
+    }
     #[Route('/create', name: 'create', methods: ['POST'])]
     public function createHouse(Request $request): JsonResponse
     {

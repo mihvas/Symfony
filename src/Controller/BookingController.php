@@ -18,12 +18,6 @@ class BookingController extends AbstractController
         $this->bookingService = $bookingService;
     }
 
-    #[Route('/get', name: 'get', methods: ['GET'])]
-    public function getAllBookings(): JsonResponse
-    {
-        $bookings = $this->bookingService->getAllBookings();
-        return $this->json($bookings);
-    }
     #[Route('/create', name: 'create', methods: ['POST'])]
     public function createBooking(Request $request): JsonResponse
     {
@@ -38,9 +32,15 @@ class BookingController extends AbstractController
             return $this->json(['error1' => 'Необходимы параметры phone и houseId']);
         }
 
-        $id = $this->bookingService->createBooking($phone,$houseId, $comment);
+        $id = $this->bookingService->createBooking($phone, $houseId, $comment);
 
-        return $this->json(['success' => true,'bookingId' => $id]);
+        if (!$id) {
+            http_response_code(400);
+            return $this->json(['error2' => 'Не получилось забронировать домик. 
+            Проверьте правильность id и свободность данного домика.']);
+        }
+
+        return $this->json(['success' => true, 'bookingId' => $id]);
     }
 
     #[Route('/update', name: 'update', methods: ['PUT'])]
@@ -63,7 +63,7 @@ class BookingController extends AbstractController
             return $this->json(['error2' => 'Бронирование не найдено']);
         }
 
-        $booking['comment']=$newComment;
+        $booking['comment'] = $newComment;
 
         $this->bookingService->updateBooking($booking);
 
@@ -83,7 +83,7 @@ class BookingController extends AbstractController
             return $this->json(['error1' => 'Необходимы параметры id']);
         }
 
-        $isDelete= $this->bookingService->deleteBooking((int)$id);
+        $isDelete = $this->bookingService->deleteBooking((int)$id);
 
         if (!$isDelete) {
             http_response_code(404);
