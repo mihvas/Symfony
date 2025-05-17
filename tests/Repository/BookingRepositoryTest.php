@@ -28,26 +28,20 @@ class BookingRepositoryTest extends TestCase
         $this->booking1 = new Booking('78903493259',2,'Test2');
     }
 
-//    protected function tearDown(): void
-//    {
-//        unlink($this->testFile);
-//    }
-
-
     public function testSave(): void
     {
         $id1 = $this->repository->save($this->booking);
         $id2 = $this->repository->save($this->booking1);
 
         $booking1= $this->repository->findById($id1);
-        $booking1->setComment('New Test 2');
+        $booking1->setComment('New Test 1');
         $this->repository->save($booking1);
 
         $bookings = $this->repository->findAll();
         $this->assertEquals(1, $bookings[0]->getHouseId());
 
         $this->assertEquals(2, $bookings[1]->getHouseId());
-        $this->assertEquals('New Test 2', $bookings[0]->getComment());
+        $this->assertEquals('New Test 1', $bookings[0]->getComment());
     }
 
     public function testFindAll(): void

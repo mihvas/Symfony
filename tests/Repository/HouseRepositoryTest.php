@@ -27,14 +27,8 @@ class HouseRepositoryTest extends TestCase
 
         $this->repository = new HouseRepository($params);
         $this->house = new House( 'test1', 1, 'Test Address', 123455);
-        $this->house1 = new House('test2', 1, 'Test Address1', 123456);
+        $this->house1 = new House('test2', 1, 'Test Address1', 123456,false);
     }
-
-//    protected function tearDown(): void
-//    {
-//        unlink($this->testFile);
-//    }
-
 
     public function testSave(): void
     {
@@ -58,6 +52,14 @@ class HouseRepositoryTest extends TestCase
         $id2 = $this->repository->save($this->house1);
         $houses = $this->repository->findAll();
         $this->assertCount(2, $houses);
+    }
+
+    public function testFindAllFree(): void
+    {
+        $id1 = $this->repository->save($this->house);
+        $id2 = $this->repository->save($this->house1);
+        $houses = $this->repository->findAllFree();
+        $this->assertCount(1, $houses);
     }
 
     public function testFindById(): void

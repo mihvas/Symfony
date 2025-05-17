@@ -1,2 +1,2 @@
-id,type,beds,address,price
-0,test1,1,"Test Address",123455
+id,type,beds,address,price,free
+0,test1,1,"Test Address",123455,1
