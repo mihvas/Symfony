@@ -160,9 +160,11 @@ class HouseControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
+        $this->assertArrayHasKey('success', $data);
         $this->assertTrue($data['success']);
 
         $id = $data['houseId'];
+
         $client->request('DELETE', '/api/house/delete', [], [], [], json_encode([
             'id' => $id,
         ]));

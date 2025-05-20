@@ -41,7 +41,7 @@ class HouseController extends AbstractController
         $address = $data['address'] ?? null;
         $price = $data['price'] ?? null;
 
-        if (!$type || !$beds || !$address || !$price) {
+        if (is_null($type) || is_null($beds) || is_null($address) || is_null($price)) {
             http_response_code(400);
             return $this->json(['error1' => 'Необходимы параметры type, beds, address, price'], 400);
         }
@@ -58,7 +58,7 @@ class HouseController extends AbstractController
 
         $id = $data['id'] ?? null;
 
-        if (!$id) {
+        if (is_null($id)) {
             http_response_code(400);
             return $this->json(['error1' => 'Необходимы параметры id']);
         }

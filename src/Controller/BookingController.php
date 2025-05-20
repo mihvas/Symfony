@@ -27,14 +27,14 @@ class BookingController extends AbstractController
         $houseId = $data['houseId'] ?? null;
         $comment = $data['comment'] ?? '';
 
-        if (!$phone || !$houseId) {
+        if (is_null($phone) || is_null($houseId)) {
             http_response_code(400);
             return $this->json(['error1' => 'Необходимы параметры phone и houseId']);
         }
 
         $id = $this->bookingService->createBooking($phone, $houseId, $comment);
 
-        if (!$id) {
+        if (is_null($id)) {
             http_response_code(400);
             return $this->json(['error2' => 'Не получилось забронировать домик. 
             Проверьте правильность id и свободность данного домика.']);
@@ -51,14 +51,14 @@ class BookingController extends AbstractController
         $id = $data['id'] ?? null;
         $newComment = $data['comment'] ?? null;
 
-        if (!$id) {
+        if (is_null($id)) {
             http_response_code(400);
             return $this->json(['error1' => 'Необходимы параметры id и comment']);
 
         }
 
         $booking = $this->bookingService->findBookingById((int)$id);
-        if (!$booking) {
+        if (is_null($booking)) {
             http_response_code(404);
             return $this->json(['error2' => 'Бронирование не найдено']);
         }
@@ -78,7 +78,7 @@ class BookingController extends AbstractController
 
         $id = $data['id'] ?? null;
 
-        if (!$id) {
+        if (is_null($id)) {
             http_response_code(400);
             return $this->json(['error1' => 'Необходимы параметры id']);
         }
