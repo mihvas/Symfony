@@ -14,16 +14,29 @@ class HouseService
         $this->repository = $repository;
     }
 
-    public function createHouse(string $type, int $beds, string $address, float $price): int
+    public function createHouse(string $type, int $beds, string $address, float $price, bool $free = true): int
     {
-        $house = new House($type, $beds, $address, $price);
-        return $this->repository->save($house);
+        $house = new House($type, $beds, $address, $price, $free);
+        $this->repository->save($house);
+        return $house->getId();
     }
 
     public function updateHouse(array $data): int
     {
-        $house = new House($data['type'], $data['beds'], $data['address'], $data['price'],$data['free']);
-        return $this->repository->save($house);
+        $house = $this->repository->find($data['id']);
+
+        if (!$house) {
+            throw new \InvalidArgumentException("House with ID {$data['id']} not found.");
+        }
+
+        $house->setType($data['type']);
+        $house->setBeds($data['beds']);
+        $house->setAddress($data['address']);
+        $house->setPrice($data['price']);
+        $house->setFree($data['free'] ?? true);
+
+        $this->repository->save($house);
+        return $house->getId();
     }
 
     public function deleteHouse(int $id): bool
