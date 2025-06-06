@@ -42,7 +42,7 @@ class BookingControllerTest extends WebTestCase
             'houseId' => $houseId,
             'comment' => $comment,
             'userId' => $userId,
-            'chadId' => $chadId
+            'chatId' => $chadId
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -91,7 +91,7 @@ class BookingControllerTest extends WebTestCase
             'houseId' => $houseId,
             'comment' => 'Исходный комментарий',
             'userId' => 333,
-            'chadId' => 444
+            'chatId' => 444
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -146,7 +146,7 @@ class BookingControllerTest extends WebTestCase
             'houseId' => $houseId,
             'comment' => 'Комментарий на удаление',
             'userId' => 333,
-            'chadId' => 444
+            'chatId' => 444
         ]));
 
         $this->assertResponseIsSuccessful();

@@ -13,19 +13,17 @@ use \Cake\Chronos\Chronos;
 
 class TelegramService
 {
-    private Api $telegram;
-    private EntityManagerInterface $em;
-    private CacheInterface $cache;
 
-    public function __construct(ParameterBagInterface $params, EntityManagerInterface $em, CacheInterface $cache)
+
+    public function __construct(private readonly ParameterBagInterface  $params,
+                                private readonly EntityManagerInterface $em,
+                                private readonly CacheInterface         $cache)
     {
         $token = $params->get('telegram_bot_token');
         $this->telegram = new Api($token);
-        $this->em = $em;
-        $this->cache = $cache;
     }
 
-    public function safeText(string $text): string
+    private function safeText(string $text): string
     {
         return mb_detect_encoding($text, 'UTF-8', true)
             ? $text
@@ -60,11 +58,12 @@ class TelegramService
                 $this->messageBookingList($chatId, "Свободных домиков на эти даты нет.");
                 return;
             }
-            $index1 = $index;
+
+            $houseId = $index;
             if (!is_null($house)) {
                 foreach ($houses as $i => $h) {
                     if ($h === $house) {
-                        $index1 = $i;
+                        $houseId = $i;
                         break;
                     }
                 }
@@ -73,14 +72,14 @@ class TelegramService
             $size = 5;
             $len = count($houses);
             $inlineKeyboard = [];
-            $list = intdiv($index1, $size) + 1;
+            $list = intdiv($houseId, $size) + 1;
             $text = "Всего домиков {$len}.\nВыберите домик для бронирования:\nСтраница: {$list}.";
 
-            foreach ($houses as $ind => $house) {
-                if ($ind < $index1) {
+            foreach ($houses as $id => $house) {
+                if ($id < $houseId) {
                     continue;
                 }
-                if ($ind === $size + $index1) {
+                if ($id === $size + $houseId) {
                     $ind1 = $index + $size;
                     $inlineKeyboard[][] = [
                         'text' => "Следующая страница",
@@ -172,7 +171,7 @@ class TelegramService
             return;
         }
 
-        $comment=mb_substr($comment, 0, 256);
+        $comment = mb_substr($comment, 0, 256);
         $booking->setComment($comment);
         $this->em->persist($booking);
         $this->em->flush();
@@ -194,157 +193,152 @@ class TelegramService
         $this->messageBookingActions($chatId, $booking, $text);
     }
 
-    public function handleBookingRequest(int $chatId, int $userId, string $username, string $callbackData): void
+    public function createBooking(int $houseId, int $chatId, int $userId): void
     {
-        if (str_starts_with($callbackData, 'book_')) {
-            $houseId = (int)str_replace('book_', '', $callbackData);
-            $house = $this->em->getRepository(House::class)->find($houseId);
+        $house = $this->em->getRepository(House::class)->find($houseId);
 
-            if (!$house) {
-                $this->messageBookingList($chatId, "Домик не найден.");
-                return;
-            }
-            if (!$house->getFree()) {
-                $this->messageBookingList($chatId, "Домик в данный момент уже забронирован.");
+        if (!$house) {
+            $this->messageBookingList($chatId, "Домик не найден.");
+            return;
+        }
+        if (!$house->getFree()) {
+            $this->messageBookingList($chatId, "Домик в данный момент уже забронирован.");
 
-                return;
-            }
-
-            $booking = new Booking(
-                telegramUserId: $userId,
-                telegramChatId: $chatId,
-                house: $house,
-            );
-            $house->setFree(false);
-            $this->em->persist($house);
-            $this->em->persist($booking);
-            $this->em->flush();
-
-            $this->messageBookingList($chatId, "Заявка на бронирование домика #$houseId успешно отправлена!");
-        } else if (str_starts_with($callbackData, 'list_book')) {
-            $this->bookingList($chatId, $userId);
-        } else if (str_starts_with($callbackData, 'booking_')) {
-            $bookingId = (int)str_replace('booking_', '', $callbackData);
-            $booking = $this->em->getRepository(Booking::class)->find($bookingId);
-
-            if (!$booking) {
-                $this->messageBookingList($chatId, "Заявка не найдена.");
-                return;
-            }
-
-            $text = "Заявка {$booking->getId()},\n" .
-                "Домик номер: {$booking->getHouse()->getId()},\n" .
-                "Номер телефона: " . ($booking->getPhone() ?? 'не указан') . ",\n" .
-                "Комментарий:  " . ($booking->getComment() ?? 'не указан') . "\n";
-            $text .= "Выберете действие с заявкой:";
-
-            $this->messageBookingActions($chatId, $booking, $text);
-        } else if (str_starts_with($callbackData, 'change_phone')) {
-            $bookingId = (int)str_replace('change_phone', '', $callbackData);
-            $booking = $this->em->getRepository(Booking::class)->find($bookingId);
-
-            if (!$booking) {
-                $this->messageBookingList($chatId, "Заявка не найдена.");
-                return;
-            }
-
-            $key = 'tg_bot_b' . $userId;
-            $this->cache->delete($key);
-
-            $this->cache->get($key, fn() => ['action' => 'change_phone', 'bookingId' => $bookingId]);
-
-            $text = "Введите свой телефон:";
-            $this->messageBookingActions($chatId, $booking, $text, true);
-        } else if (str_starts_with($callbackData, 'change_comment')) {
-            $bookingId = (int)str_replace('change_comment', '', $callbackData);
-            $booking = $this->em->getRepository(Booking::class)->find($bookingId);
-
-            if (!$booking) {
-                $this->messageBookingList($chatId, "Заявка не найдена.");
-                return;
-            }
-
-            $key = 'tg_bot_b' . $userId;
-            $this->cache->delete($key);
-
-            $this->cache->get($key, fn() => ['action' => 'change_comment', 'bookingId' => $bookingId]);
-
-            $text = "Введите свой комментарий:";
-            $this->messageBookingActions($chatId, $booking, $text, true);
-        } else if (str_starts_with($callbackData, 'delete_booking')) {
-            $bookingId = (int)str_replace('delete_booking', '', $callbackData);
-            $booking = $this->em->getRepository(Booking::class)->find($bookingId);
-
-            if (!$booking) {
-                $this->messageBookingList($chatId, "Заявка не найдена.");
-                return;
-            }
-            $booking->getHouse()->setFree(true);
-            $this->em->persist($booking->getHouse());
-            $this->em->remove($booking);
-            $this->em->flush();
-
-            $text = "Заявка удалена";
-            $this->messageBookingList($chatId, $text);
-        } else if (str_starts_with($callbackData, 'back')) {
-            $bookingId = (int)str_replace('back', '', $callbackData);
-            $booking = $this->em->getRepository(Booking::class)->find($bookingId);
-
-            $key = 'tg_bot_b' . $userId;
-            $this->cache->delete($key);
-
-
-            if (!$booking) {
-                $this->messageBookingList($chatId, "Действие успешно отменено. Заявка не найдена.");
-                return;
-            }
-
-            $text = "Действие успешно отменено. \n";
-            $this->telegram->sendMessage([
-                'chat_id' => $chatId,
-                'text' => $text
-            ]);
-
-            $text = "Заявка {$booking->getId()},\n" .
-                "Домик номер: {$booking->getHouse()->getId()},\n" .
-                "Номер телефона: " . ($booking->getPhone() ?? 'не указан') . ",\n" .
-                "Комментарий:  " . ($booking->getComment() ?? 'не указан') . "\n";
-            $text .= "Выберете действие с заявкой:";
-            $this->messageBookingActions($chatId, $booking, $text);
-        } else if (str_starts_with($callbackData, 'next_houses')) {
-            $data = preg_replace('/^next_houses/', '', $callbackData);
-            $date = preg_replace('/_text_.*$/', '', $data);
-            $idIndex = preg_replace('/(^.*_text_)/', '', $data);
-            $houseId = (int)preg_replace('/_.*$/', '', $idIndex);
-            $index = (int)preg_replace('/^.*_/', '', $idIndex);
-
-            $house = $this->em->getRepository(House::class)->find($houseId);
-
-            $this->handleDateRange($chatId, $date, $house, $index);
-        } else if (str_starts_with($callbackData, 'last_houses')) {
-            $data = preg_replace('/^last_houses/', '', $callbackData);
-            $date = preg_replace('/_text_.*$/', '', $data);
-            $index = (int)preg_replace('/(^.*_text_)/', '', $data);
-
-            $this->handleDateRange($chatId, $date, null, $index);
-        } else if (str_starts_with($callbackData, 'next_bookings')) {
-            $data = preg_replace('/^next_bookings/', '', $callbackData);
-            $bookingsId = (int)preg_replace('/_.*$/', '', $data);
-            $index = (int)preg_replace('/^.*_/', '', $data);
-
-            $bookings = $this->em->getRepository(Booking::class)->find($bookingsId);
-
-            $this->bookingList($chatId, $userId, $bookings, $index);
-        } else if (str_starts_with($callbackData, 'last_bookings')) {
-            $index = (int)preg_replace('/^last_bookings/', '', $callbackData);
-
-            $this->bookingList($chatId, $userId, null, $index);
+            return;
         }
 
+        $booking = new Booking(
+            telegramUserId: $userId,
+            telegramChatId: $chatId,
+            house: $house,
+        );
+        $house->setFree(false);
+        $this->em->persist($house);
+        $this->em->persist($booking);
+        $this->em->flush();
 
+        $this->messageBookingList($chatId, "Заявка на бронирование домика #$houseId успешно отправлена!");
     }
 
-    public function bookingList(int $chatId, int $userId, ?Booking $booking = null, int $index = 0)
+    public function showBooking(int $bookingId, int $chatId, int $userId): void
+    {
+        $booking = $this->em->getRepository(Booking::class)->find($bookingId);
+
+        if (!$booking) {
+            $this->messageBookingList($chatId, "Заявка не найдена.");
+            return;
+        }
+
+        $text = "Заявка {$booking->getId()},\n" .
+            "Домик номер: {$booking->getHouse()->getId()},\n" .
+            "Номер телефона: " . ($booking->getPhone() ?? 'не указан') . ",\n" .
+            "Комментарий:  " . ($booking->getComment() ?? 'не указан') . "\n";
+        $text .= "Выберете действие с заявкой:";
+
+        $this->messageBookingActions($chatId, $booking, $text);
+    }
+
+    public function changePhone(int $bookingId, int $chatId, int $userId): void
+    {
+        $booking = $this->em->getRepository(Booking::class)->find($bookingId);
+
+        if (!$booking) {
+            $this->messageBookingList($chatId, "Заявка не найдена.");
+            return;
+        }
+
+        $key = 'tg_bot_b' . $userId;
+        $this->cache->delete($key);
+
+        $this->cache->get($key, fn() => ['action' => 'change_phone', 'bookingId' => $bookingId]);
+
+        $text = "Введите свой телефон:";
+        $this->messageBookingActions($chatId, $booking, $text, true);
+    }
+
+    public function changeComment(int $bookingId, int $chatId, int $userId): void
+    {
+        $booking = $this->em->getRepository(Booking::class)->find($bookingId);
+
+        if (!$booking) {
+            $this->messageBookingList($chatId, "Заявка не найдена.");
+            return;
+        }
+
+        $key = 'tg_bot_b' . $userId;
+        $this->cache->delete($key);
+
+        $this->cache->get($key, fn() => ['action' => 'change_comment', 'bookingId' => $bookingId]);
+
+        $text = "Введите свой комментарий:";
+        $this->messageBookingActions($chatId, $booking, $text, true);
+    }
+
+    public function deleteBooking(int $bookingId, int $chatId, int $userId): void
+    {
+        $booking = $this->em->getRepository(Booking::class)->find($bookingId);
+
+        if (!$booking) {
+            $this->messageBookingList($chatId, "Заявка не найдена.");
+            return;
+        }
+        $booking->getHouse()->setFree(true);
+        $this->em->persist($booking->getHouse());
+        $this->em->remove($booking);
+        $this->em->flush();
+
+        $text = "Заявка удалена";
+        $this->messageBookingList($chatId, $text);
+    }
+
+    public function back(int $bookingId, int $chatId, int $userId): void
+    {
+        $booking = $this->em->getRepository(Booking::class)->find($bookingId);
+
+        $key = 'tg_bot_b' . $userId;
+        $this->cache->delete($key);
+
+
+        if (!$booking) {
+            $this->messageBookingList($chatId, "Действие успешно отменено. Заявка не найдена.");
+            return;
+        }
+
+        $text = "Действие успешно отменено. \n";
+        $this->telegram->sendMessage([
+            'chat_id' => $chatId,
+            'text' => $text
+        ]);
+
+        $text = "Заявка {$booking->getId()},\n" .
+            "Домик номер: {$booking->getHouse()->getId()},\n" .
+            "Номер телефона: " . ($booking->getPhone() ?? 'не указан') . ",\n" .
+            "Комментарий:  " . ($booking->getComment() ?? 'не указан') . "\n";
+        $text .= "Выберете действие с заявкой:";
+        $this->messageBookingActions($chatId, $booking, $text);
+    }
+
+    public function nextPage(int $id, int $chatId, int $userId, int $index, ?string $date, bool $isHouse = true): void
+    {
+        if ($isHouse) {
+            $house = $this->em->getRepository(House::class)->find($id);
+            $this->handleDateRange($chatId, $date, $house, $index);
+        } else {
+            $bookings = $this->em->getRepository(Booking::class)->find($id);
+            $this->bookingList($chatId, $userId, $bookings, $index);
+        }
+    }
+    public function lastPage(int $chatId, int $userId, int $index, ?string $date, bool $isHouse = true): void
+    {
+        if ($isHouse) {
+            $this->handleDateRange($chatId, $date, null, $index);
+        } else {
+            $this->bookingList($chatId, $userId, null, $index);
+        }
+    }
+
+
+    public function bookingList(int $chatId, int $userId, ?Booking $booking = null, int $index = 0): void
     {
         $bookings = $this->em->getRepository(Booking::class)->findAllUser($userId);
 
@@ -353,11 +347,11 @@ class TelegramService
             return;
         }
 
-        $index1 = $index;
+        $bookingId = $index;
         if (!is_null($booking)) {
             foreach ($bookings as $i => $b) {
                 if ($b === $booking) {
-                    $index1 = $i;
+                    $bookingId = $i;
                     break;
                 }
             }
@@ -366,14 +360,14 @@ class TelegramService
         $size = 5;
         $len = count($bookings);
         $inlineKeyboard = [];
-        $list = intdiv($index1, $size) + 1;
+        $list = intdiv($bookingId, $size) + 1;
         $text = "Всего заявок {$len}.\nВыбере заявку, которую хотите изменить:\nСтраница: {$list}.";
 
-        foreach ($bookings as $ind => $booking) {
-            if ($ind < $index1) {
+        foreach ($bookings as $id => $booking) {
+            if ($id < $bookingId) {
                 continue;
             }
-            if ($ind === $size + $index1) {
+            if ($id === $size + $bookingId) {
                 $ind1 = $index + $size;
                 $inlineKeyboard[][] = [
                     'text' => "Следующая страница",

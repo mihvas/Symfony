@@ -15,7 +15,7 @@
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
-        <server name="DATABASE_URL" value="pgsql://symfony:symfony@db:5432/symfony?serverVersion=15&amp;charset=utf8"/>
+        <server name="DATABASE_URL" value="%DATABASE_URL%"/>
         <env name="KERNEL_CLASS" value="App\Kernel"/>
     </php>
 

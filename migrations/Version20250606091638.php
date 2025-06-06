@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250530050756 extends AbstractMigration
+final class Version20250606091638 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -27,7 +27,7 @@ final class Version20250530050756 extends AbstractMigration
             CREATE INDEX IDX_2FB1D4426BB74515 ON Booking (house_id)
         SQL);
         $this->addSql(<<<'SQL'
-            CREATE TABLE house (id SERIAL NOT NULL, type VARCHAR(255) NOT NULL, beds INT DEFAULT NULL, address VARCHAR(255) NOT NULL, price INT DEFAULT NULL, free BOOLEAN DEFAULT NULL, date_start VARCHAR(255) NOT NULL, date_end VARCHAR(255) NOT NULL, PRIMARY KEY(id))
+            CREATE TABLE house (id SERIAL NOT NULL, type VARCHAR(255) NOT NULL, beds INT DEFAULT NULL, address VARCHAR(255) NOT NULL, price INT DEFAULT NULL, free BOOLEAN DEFAULT NULL, date_start VARCHAR(255) DEFAULT NULL, date_end VARCHAR(255) DEFAULT NULL, PRIMARY KEY(id))
         SQL);
         $this->addSql(<<<'SQL'
             ALTER TABLE Booking ADD CONSTRAINT FK_2FB1D4426BB74515 FOREIGN KEY (house_id) REFERENCES house (id) NOT DEFERRABLE INITIALLY IMMEDIATE

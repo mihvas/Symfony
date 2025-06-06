@@ -34,12 +34,8 @@ db-test-create:
 db-create:
 	$(CONSOLE) doctrine:database:create --if-not-exists --env=dev
 
-db-test-migrate:
+test-migrate:
 	$(CONSOLE) doctrine:migrations:migrate --env=test
-
-db-test-schema-reset:
-	$(CONSOLE) doctrine:schema:drop --env=test --force
-	$(CONSOLE) doctrine:migrations:migrate --env=test --no-interaction
 
 migrate:
 	$(CONSOLE) doctrine:migrations:migrate --env=dev

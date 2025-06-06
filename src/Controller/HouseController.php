@@ -41,33 +41,16 @@ class HouseController extends AbstractController
         $beds = $data['beds'] ?? null;
         $address = $data['address'] ?? null;
         $price = $data['price'] ?? null;
-        $free = $data['free'] ?? true;
+        $isFree = $data['free'] ?? true;
         if (is_null($type) || is_null($beds) || is_null($address) || is_null($price)) {
             return $this->json(['error' => 'Необходимы параметры type, beds, address, price'], 400);
         }
 
-        $id = $this->houseService->createHouse($type, $beds, $address, $price,$free);
+        $id = $this->houseService->createHouse($type, $beds, $address, $price,$isFree);
 
         return $this->json(['success' => true, 'houseId' => $id]);
     }
 
-//    #[Route('/update', name: 'update', methods: ['PUT'])]
-//    public function updateHouse(Request $request): JsonResponse
-//    {
-//        $data = json_decode($request->getContent(), true);
-//
-//        if (
-//            empty($data['id']) || empty($data['type']) ||
-//            !isset($data['beds']) || !isset($data['price']) ||
-//            !isset($data['address']) || !isset($data['free'])
-//        ) {
-//            return $this->json(['error' => 'Необходимы параметры id, type, beds, address, price, free'], 400);
-//        }
-//
-//        $id = $this->houseService->updateHouse($data);
-//
-//        return $this->json(['success' => true, 'updatedHouseId' => $id]);
-//    }
 
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteHouse(Request $request): JsonResponse

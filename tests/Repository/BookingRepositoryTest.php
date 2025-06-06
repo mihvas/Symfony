@@ -34,7 +34,6 @@ class BookingRepositoryTest extends KernelTestCase
         $this->userId = 111;
         $this->booking1 = new Booking($this->userId, 1112,'Comment 1', '71234567890');
         $this->booking2 = new Booking(222, 2222,'Comment 2', '77777777777');
-//
     }
 
     private function createHouse(string $type): House

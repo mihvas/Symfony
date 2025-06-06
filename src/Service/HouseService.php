@@ -14,9 +14,9 @@ class HouseService
         $this->repository = $repository;
     }
 
-    public function createHouse(string $type, int $beds, string $address, float $price, bool $free = true): int
+    public function createHouse(string $type, int $beds, string $address, float $price, bool $isFree = true): int
     {
-        $house = new House($type, $beds, $address, $price, $free);
+        $house = new House($type, $beds, $address, $price, $isFree);
         $this->repository->save($house);
         return $house->getId();
     }

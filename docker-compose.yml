@@ -10,10 +10,9 @@ services:
       - ./:/var/www/html
     env_file:
       - .env.local
-      - .env.test.local
     depends_on:
       - db
-      - test_db
+
 
 
   nginx:
@@ -40,22 +39,10 @@ services:
       - "${DB_PORT_IN}:${DB_PORT}"
     volumes:
       - db_data:/var/lib/postgresql/data
-  test_db:
-    image: postgres:latest
-    container_name: db_test_container
-    env_file:
-      - .env.test.local
-    environment:
-      POSTGRES_DB: ${DB_TEST_NAME}
-      POSTGRES_USER: ${DB_TEST_USER}
-      POSTGRES_PASSWORD: ${DB_TEST_PASSWORD}
-    ports:
-      - "${DB_TEST_PORT_IN}:${DB_TEST_PORT}"
-    volumes:
-      - test_db_data:/var/lib/postgresql/data
+
 
 
 volumes:
   db_data:
-  test_db_data:
+
 
