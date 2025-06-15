@@ -28,14 +28,12 @@ class BookingController extends AbstractController
         $phone = $data['phone'] ?? null;
         $houseId = $data['houseId'] ?? null;
         $comment = $data['comment'] ?? null;
-        $userId = $data['userId'] ?? null;
-        $chatId = $data['chatId'] ?? null;
 
         if ($phone===null || $houseId===null) {
             return $this->json(['error' => 'Необходимы параметры phone и houseId'], 400);
         }
 
-        $bookingId = $this->bookingService->createBooking($phone,$houseId, $userId,$chatId, $comment);
+        $bookingId = $this->bookingService->createBooking($phone,$houseId, $comment);
 
         if ($bookingId===null) {
             return $this->json(['error' => 'Не получилось забронировать домик. Проверьте правильность id и свободность данного домика.'], 400);

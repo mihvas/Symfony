@@ -23,13 +23,13 @@ class Booking
     private ?string $comment;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    private int $telegramUserId;
+    private ?int $telegramUserId;
 
     #[ORM\Column(type: 'integer', nullable: true)]
-    private int $telegramChatId;
+    private ?int $telegramChatId;
     public function __construct(
-        int $telegramUserId,
-        int $telegramChatId,
+        ?int $telegramUserId= null,
+        ?int $telegramChatId= null,
         ?string $comment= null,
         ?string $phone= null,
         ?House $house = null,
@@ -64,12 +64,12 @@ class Booking
         return $this->comment;
     }
 
-    public function getTelegramUserId(): int
+    public function getTelegramUserId(): ?int
     {
         return $this->telegramUserId;
     }
 
-    public function getTelegramChatId(): int
+    public function getTelegramChatId(): ?int
     {
         return $this->telegramChatId;
     }
@@ -79,12 +79,12 @@ class Booking
         $this->id = $id;
     }
 
-    public function setPhone(string $phone): void
+    public function setPhone(?string $phone): void
     {
         $this->phone = $phone;
     }
 
-    public function setComment(string $comment): void
+    public function setComment(?string $comment): void
     {
         $this->comment = $comment;
     }
@@ -97,12 +97,12 @@ class Booking
         return $this;
     }
 
-    public function setTelegramUserId(int $telegramUserId): void
+    public function setTelegramUserId(?int $telegramUserId): void
     {
         $this->telegramUserId = $telegramUserId;
     }
 
-    public function setTelegramChatId(int $telegramChatId): void
+    public function setTelegramChatId(?int $telegramChatId): void
     {
         $this->telegramChatId = $telegramChatId;
 

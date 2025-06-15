@@ -14,16 +14,17 @@ class BookingService
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        BookingRepository $repository,
-        HouseRepository $houseRepository,
+        BookingRepository      $repository,
+        HouseRepository        $houseRepository,
         EntityManagerInterface $entityManager
-    ) {
+    )
+    {
         $this->repository = $repository;
         $this->houseRepository = $houseRepository;
         $this->entityManager = $entityManager;
     }
 
-    public function createBooking(string $phone, int $houseId,int $userId,int $chatId, string $comment): ?int
+    public function createBooking(string $phone, int $houseId, string $comment): ?int
     {
         $house = $this->houseRepository->find($houseId);
 
@@ -32,7 +33,7 @@ class BookingService
         }
 
         $house->setFree(false);
-        $booking = new Booking($userId,$chatId,$comment,$phone);
+        $booking = new Booking(comment: $comment, phone: $phone);
         $booking->setHouse($house);
 
         $this->entityManager->persist($booking);

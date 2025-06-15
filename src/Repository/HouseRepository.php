@@ -33,7 +33,6 @@ class HouseRepository extends ServiceEntityRepository
     {
         $entityManager = $this->getEntityManager();
         $entityManager->persist($house);
-        //print_r($house);
         $entityManager->flush();
 
     }

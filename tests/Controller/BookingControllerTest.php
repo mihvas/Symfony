@@ -15,7 +15,6 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        // Создание дома
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
@@ -35,14 +34,10 @@ class BookingControllerTest extends WebTestCase
 
         $phone = '79999999999';
         $comment = 'Тестовое бронирование';
-        $userId = 333;
-        $chadId = 444;
         $client->request('POST', '/api/booking/create', [], [], [], json_encode([
             'phone' => $phone,
             'houseId' => $houseId,
             'comment' => $comment,
-            'userId' => $userId,
-            'chatId' => $chadId
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -59,8 +54,6 @@ class BookingControllerTest extends WebTestCase
         $this->assertNotNull($booking);
         $this->assertEquals($comment, $booking->getComment());
         $this->assertEquals($phone, $booking->getPhone());
-        $this->assertEquals($userId, $booking->getTelegramUserId());
-        $this->assertEquals($chadId, $booking->getTelegramChatId());
         $this->assertEquals($houseId, $booking->getHouse()->getId());
     }
 
@@ -90,8 +83,6 @@ class BookingControllerTest extends WebTestCase
             'phone' => '78888888888',
             'houseId' => $houseId,
             'comment' => 'Исходный комментарий',
-            'userId' => 333,
-            'chatId' => 444
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -145,8 +136,6 @@ class BookingControllerTest extends WebTestCase
             'phone' => '77777777777',
             'houseId' => $houseId,
             'comment' => 'Комментарий на удаление',
-            'userId' => 333,
-            'chatId' => 444
         ]));
 
         $this->assertResponseIsSuccessful();

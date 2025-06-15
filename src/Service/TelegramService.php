@@ -13,7 +13,7 @@ use \Cake\Chronos\Chronos;
 
 class TelegramService
 {
-
+    private readonly Api $telegram;
 
     public function __construct(private readonly ParameterBagInterface  $params,
                                 private readonly EntityManagerInterface $em,
