@@ -3,41 +3,21 @@
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
-use App\Kernel;
-use App\Repository\BookingRepository;
-use App\Repository\HouseRepository;
-use App\Service\BookingService;
+use App\Entity\House;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use Symfony\Component\Filesystem\Path;
 
 class BookingControllerTest extends WebTestCase
 {
-    private string $testFilePath;
-    private string $testFilePathHouse;
-    protected function setUp(): void
-    {
-        $projectDir = dirname(__DIR__, 2);
-        $this->testFilePath = $projectDir . '/tests/data/test_booking.csv';
-        $this->testFilePathHouse = $projectDir . '/tests/data/test_house.csv';
 
-        file_put_contents($this->testFilePath, '');
-        file_put_contents($this->testFilePathHouse, '');
-
-        $paramsMock = $this->createMock(ParameterBagInterface::class);
-        $paramsMock->method('get')
-            ->with('paths.booking_csv')
-            ->willReturn($this->testFilePath);
-        $paramsMock->method('get')
-            ->with('paths.house_csv')
-            ->willReturn($this->testFilePathHouse);
-    }
 
     public function testCreateBooking(): void
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/house/create',[], [], [], json_encode( [
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
             'type' => 'test_booking_house',
             'beds' => 2,
             'address' => 'address1',
@@ -49,13 +29,11 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
-        $this->assertArrayHasKey('success', $data);
-
         $houseId = $data['houseId'];
 
-        $phone = '79999999999';
-        $comment = 'Тестовое бронирование1';
 
+        $phone = '79999999999';
+        $comment = 'Тестовое бронирование';
         $client->request('POST', '/api/booking/create', [], [], [], json_encode([
             'phone' => $phone,
             'houseId' => $houseId,
@@ -67,27 +45,30 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
+        $id = $data['bookingId'];
 
-        $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
+        $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $content = file_get_contents($this->testFilePath);
-        $this->assertNotFalse($content);
+        $booking = $em->getRepository(Booking::class)->findOneByid($id);
 
-        $this->assertStringContainsString($phone, $content, 'Телефон в файле отсутствует');
-        $this->assertStringContainsString($comment, $content, 'Комментарий в файле отсутствует');
-        $this->assertStringContainsString((string)$houseId, $content, 'houseId в файле отсутствует');
+        $this->assertNotNull($booking);
+        $this->assertEquals($comment, $booking->getComment());
+        $this->assertEquals($phone, $booking->getPhone());
+        $this->assertEquals($houseId, $booking->getHouse()->getId());
     }
 
     public function testUpdateBooking(): void
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/house/create',[], [], [], json_encode( [
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], json_encode([
             'type' => 'test_booking_house2',
             'beds' => 2,
-            'address' => 'address1',
-            'price' => 100
+            'address' => 'address2',
+            'price' => 200
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -95,14 +76,13 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
-        $this->assertArrayHasKey('success', $data);
 
-        $phone = '78888888888';
         $houseId = $data['houseId'];
+
         $client->request('POST', '/api/booking/create', [], [], [], json_encode([
-            'phone' => $phone,
+            'phone' => '78888888888',
             'houseId' => $houseId,
-            'comment' => 'Тестовое бронирование2',
+            'comment' => 'Исходный комментарий',
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -110,14 +90,13 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
-        $this->assertArrayHasKey('success', $data);
+        $bookingId = $data['bookingId'];
 
-        $id = $data['bookingId'];
-        $comment = 'Обновленный комментарий2';
 
+        $newComment = 'Обновленный комментарий';
         $client->request('PUT', '/api/booking/update', [], [], [], json_encode([
-            'id' => $id,
-            'comment' => $comment,
+            'id' => $bookingId,
+            'comment' => $newComment,
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -125,28 +104,25 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
+        $id = $data['bookingId'];
 
-        $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
+        $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $content = file_get_contents($this->testFilePath);
-        $this->assertNotFalse($content);
+        $updated = $em->getRepository(Booking::class)->findOneByid($id);
 
-        $this->assertStringContainsString((string)$id, $content, 'Изменился id обновляемых данных в файле');
-        $this->assertStringContainsString($phone, $content, 'Телефон в файле отсутствует');
-        $this->assertStringContainsString($comment, $content, 'Обновленный комментарий в файле отсутствует');
-        $this->assertStringContainsString((string)$houseId, $content, 'houseId в файле отсутствует');
+        $this->assertNotNull($updated);
+        $this->assertEquals($newComment, $updated->getComment());
     }
 
     public function testDeleteBooking(): void
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/house/create',[], [], [], json_encode( [
+        $client->request('POST', '/api/house/create', [], [], [], json_encode([
             'type' => 'test_booking_house3',
-            'beds' => 2,
-            'address' => 'address1',
-            'price' => 100
+            'beds' => 3,
+            'address' => 'address3',
+            'price' => 300
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -154,30 +130,24 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
-        $this->assertArrayHasKey('success', $data);
-
-        $phone = '77777777777';
         $houseId = $data['houseId'];
-        $comment = 'Тестовое бронирование3';
 
         $client->request('POST', '/api/booking/create', [], [], [], json_encode([
-            'phone' => $phone,
+            'phone' => '77777777777',
             'houseId' => $houseId,
-            'comment' => $comment,
+            'comment' => 'Комментарий на удаление',
         ]));
-
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
-        $this->assertArrayHasKey('success', $data);
+        $bookingId = $data['bookingId'];
 
-        $id = $data['bookingId'];
 
         $client->request('DELETE', '/api/booking/delete', [], [], [], json_encode([
-            'id' => $id,
+            'id' => $bookingId,
         ]));
 
         $this->assertResponseIsSuccessful();
@@ -185,16 +155,12 @@ class BookingControllerTest extends WebTestCase
 
         $content = $client->getResponse()->getContent();
         $data = json_decode($content, true);
+        $id = $data['id'];
 
-        $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
+        $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $content = file_get_contents($this->testFilePath);
-        $this->assertNotFalse($content);
+        $deleted = $em->getRepository(Booking::class)->findOneByid($id);
 
-        $this->assertStringNotContainsString((string)$id, $content, 'id остался в файле');
-        $this->assertStringNotContainsString($phone, $content, 'Телефон остался в файле');
-        $this->assertStringNotContainsString($comment, $content, 'Комментарий остался в файле');
-        $this->assertStringNotContainsString((string)$houseId, $content, 'houseId остался в файле');
+        $this->assertNull($deleted);
     }
 }

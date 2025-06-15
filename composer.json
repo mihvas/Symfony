@@ -9,6 +9,8 @@
         "php": ">=8.2",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "cakephp/chronos": "^3.1",
+        "irazasyed/telegram-bot-sdk": "*",
         "symfony/browser-kit": "7.2.*",
         "symfony/console": "7.2.*",
         "symfony/dotenv": "7.2.*",
@@ -16,7 +18,8 @@
         "symfony/framework-bundle": "7.2.*",
         "symfony/http-client": "7.2.*",
         "symfony/runtime": "7.2.*",
-        "symfony/yaml": "7.2.*"
+        "symfony/yaml": "7.2.*",
+        "telegram-bot/api": "^2.5"
     },
     "require-dev": {
         "doctrine/dbal": "^3.9.4",

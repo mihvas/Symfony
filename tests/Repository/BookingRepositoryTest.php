@@ -1,84 +1,122 @@
 <?php
 
 namespace App\Tests\Repository;
-use PHPUnit\Framework\MockObject\Exception;
-use PHPUnit\Framework\TestCase;
-use App\Repository\BookingRepository;
-use App\Entity\Booking;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 
-class BookingRepositoryTest extends TestCase
+use App\Entity\Booking;
+use App\Entity\House;
+use App\Repository\BookingRepository;
+use App\Repository\HouseRepository;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
+use Doctrine\ORM\EntityManagerInterface;
+
+class BookingRepositoryTest extends KernelTestCase
 {
-    private string $filePath;
-    private BookingRepository $repository;
+    private EntityManagerInterface $em;
+    private BookingRepository $bookingRepository;
+    private HouseRepository $houseRepository;
 
     protected function setUp(): void
     {
-        $projectDir = dirname(__DIR__, 2);
-        $this->filePath = $projectDir . '/tests/data/test_booking_unit.csv';
-        file_put_contents($this->filePath, '');
+        self::bootKernel();
+        $container = static::getContainer();
 
-        $params = $this->createMock(ParameterBagInterface::class);
-        $params->method('get')
-            ->with('paths.booking_csv')
-            ->willReturn($this->filePath);
+        $this->em = $container->get(EntityManagerInterface::class);
+        $this->bookingRepository = $container->get(BookingRepository::class);
+        $this->houseRepository = $container->get(HouseRepository::class);
 
-        $this->repository = new BookingRepository($params);
-        $this->booking = new Booking('78903493259',1,'Test1' );
-        $this->booking1 = new Booking('78903493259',2,'Test2');
+        $conn = $this->em->getConnection();
+        $platform = $conn->getDatabasePlatform();
+        $conn->executeStatement($platform->getTruncateTableSQL('Booking', true));
+        $conn->executeStatement($platform->getTruncateTableSQL('House', true));
+
+        $this->house1 = $this->createHouse('Test Booking 1');
+        $this->house2 = $this->createHouse('Test Booking 2');
+        $this->userId = 111;
+        $this->booking1 = new Booking($this->userId, 1112,'Comment 1', '71234567890');
+        $this->booking2 = new Booking(222, 2222,'Comment 2', '77777777777');
     }
 
-    public function testSave(): void
+    private function createHouse(string $type): House
     {
-        $id1 = $this->repository->save($this->booking);
-        $id2 = $this->repository->save($this->booking1);
+        $house = new House($type, 2, 'Test Address',100);
+        $this->houseRepository->save($house);
+        return $house;
+    }
 
-        $booking1= $this->repository->findById($id1);
-        $booking1->setComment('New Test 1');
-        $this->repository->save($booking1);
+    public function testSaveAndFind(): void
+    {
 
-        $bookings = $this->repository->findAll();
-        $this->assertEquals(1, $bookings[0]->getHouseId());
 
-        $this->assertEquals(2, $bookings[1]->getHouseId());
-        $this->assertEquals('New Test 1', $bookings[0]->getComment());
+        $this->booking1->setHouse($this->house1);
+
+        $this->bookingRepository->save($this->booking1);
+
+        $fetched = $this->bookingRepository->findById($this->booking1->getId());
+
+        $this->assertNotNull($fetched);
+        $this->assertEquals('71234567890', $fetched->getPhone());
+        $this->assertEquals('Comment 1', $fetched->getComment());
+        $this->assertEquals('1112', $fetched->getTelegramChatId());
+        $this->assertEquals('111', $fetched->getTelegramUserId());
+        $this->assertEquals($this->house1->getId(), $fetched->getHouse()->getId());
     }
 
     public function testFindAll(): void
     {
-        $id1 = $this->repository->save($this->booking);
-        $id2 = $this->repository->save($this->booking1);
-        $bookings = $this->repository->findAll();
-        $this->assertCount(2, $bookings);
+
+        $this->booking1->setHouse($this->house1);
+        $this->booking2->setHouse($this->house2);
+
+        $this->bookingRepository->save($this->booking1);
+        $this->bookingRepository->save($this->booking2);
+
+        $all = $this->bookingRepository->findAll();
+        $this->assertCount(2, $all);
     }
 
-    public function testFindById(): void
+    public function testFindAllUser(): void
     {
 
-        $id1 = $this->repository->save($this->booking);
-        $id2 = $this->repository->save($this->booking1);
+        $this->booking1->setHouse($this->house1);
+        $this->booking2->setHouse($this->house2);
 
-        $booking_id1 = $this->repository->findById($id1);
-        $booking_id2 = $this->repository->findById($id2);
+        $this->bookingRepository->save($this->booking1);
+        $this->bookingRepository->save($this->booking2);
 
-        $this->assertNotNull($booking_id1);
-        $this->assertNotNull($booking_id2);
-        $this->assertEquals($id1, $booking_id1->getId());
-        $this->assertEquals($id2, $booking_id2->getId());
+        $all = $this->bookingRepository->findAllUser($this->userId);
+        $this->assertCount(1, $all);
+        $this->assertSame('Comment 1', $all[0]->getComment());
+    }
 
+    public function testUpdate(): void
+    {
+        $this->booking1->setHouse($this->house1);
+
+        $this->bookingRepository->save($this->booking1);
+
+        $this->booking1->setPhone('78888888888');
+        $this->booking1->setComment('New comment');
+        $this->bookingRepository->save($this->booking1);
+
+        $reloaded = $this->bookingRepository->findById($this->booking1->getId());
+        $this->assertSame('78888888888', $reloaded->getPhone());
+        $this->assertSame('New comment', $reloaded->getComment());
     }
 
     public function testDeleteById(): void
     {
+        $this->booking2->setHouse($this->house2);
 
-        $id1 = $this->repository->save($this->booking);
-        $id2 = $this->repository->save($this->booking1);
+        $this->bookingRepository->save($this->booking2);
+        $id = $this->booking2->getId();
 
-        $this->repository->deleteById($id2);
-        $bookings = $this->repository->findAll();
-        $booking = $this->repository->findById($id2);
+        $this->assertTrue($this->bookingRepository->deleteById($id));
+        $this->assertNull($this->bookingRepository->findById($id));
+    }
 
-        $this->assertNull($booking);
-        $this->assertCount(1, $bookings);
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $this->em->close();
     }
 }

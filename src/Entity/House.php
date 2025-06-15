@@ -2,9 +2,12 @@
 
 namespace App\Entity;
 
+use App\Repository\HouseRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: HouseRepository::class)]
 #[ORM\Table(name: 'house')]
 class House
 {
@@ -16,16 +19,25 @@ class House
     #[ORM\Column(type: 'string', length: 255)]
     private string $type;
 
-    #[ORM\Column(type: 'int', nullable: true)]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private int $beds;
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $address;
 
-    #[ORM\Column(type: 'int', nullable: true)]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private int $price;
-    #[ORM\Column(type: 'bool', nullable: true)]
+    #[ORM\Column(type: 'boolean', nullable: true)]
     private bool $free;
+
+    #[ORM\Column(type: 'string', length: 255,nullable: true)]
+    private ?string $date_start;
+    #[ORM\Column(type: 'string', length: 255,nullable: true)]
+    private ?string $date_end;
+
+
+    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'house')]
+    private Collection $bookings;
 
     public function __construct(
         string $type,
@@ -33,6 +45,8 @@ class House
         string $address,
         int $price,
         bool $free = true,
+        ?string $date_start = null,
+        ?string $date_end = null,
         int $id = -1
     )
     {
@@ -42,6 +56,8 @@ class House
         $this->address = $address;
         $this->price = $price;
         $this->free = $free;
+        $this->date_start = $date_start;
+        $this->date_end = $date_end;
     }
 
     public function getId(): int
@@ -75,6 +91,16 @@ class House
         return $this->free;
     }
 
+    public function getDateStart(): ?string
+    {
+        return $this->date_start;
+    }
+
+    public function getDateEnd(): ?string
+    {
+        return $this->date_end;
+    }
+
     public function setId(int $id): void
     {
         $this->id = $id;
@@ -100,6 +126,16 @@ class House
         $this->free = $free;
     }
 
+    public function setDateStart(string $date_start): void
+    {
+        $this->date_start = $date_start;
+    }
+
+    public function setDateEnd(string $date_end): void
+    {
+        $this->date_end = $date_end;
+    }
+
     public function toArray(): array
     {
         return [
@@ -109,6 +145,8 @@ class House
             'address' => $this->address,
             'price' => $this->price,
             'free' => $this->free,
+            'date_start' => $this->date_start,
+            'date_end' => $this->date_end,
 
         ];
     }

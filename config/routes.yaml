@@ -3,3 +3,11 @@ controllers:
         path: ../src/Controller/
         namespace: App\Controller
     type: attribute
+webhook_post:
+    path: /webhook
+    controller: App\Controller\TelegramController::webhook
+    methods: [POST]
+webhook_get:
+    path: /webhook
+    controller: App\Controller\TelegramController::webhookGet
+    methods: [GET]
