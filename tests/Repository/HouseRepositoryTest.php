@@ -2,93 +2,84 @@
 
 namespace App\Tests\Repository;
 
-
-use PHPUnit\Framework\MockObject\Exception;
-use PHPUnit\Framework\TestCase;
-use App\Repository\HouseRepository;
 use App\Entity\House;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
+use App\Repository\HouseRepository;
+use Cake\Chronos\Chronos;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
-class HouseRepositoryTest extends TestCase
+class HouseRepositoryTest extends KernelTestCase
 {
-    private string $filePath;
+    private EntityManagerInterface $em;
     private HouseRepository $repository;
 
     protected function setUp(): void
     {
-        $projectDir = dirname(__DIR__, 2);
-        $this->filePath = $projectDir . '/tests/data/test_house_unit.csv';
-        file_put_contents($this->filePath, '');
+        self::bootKernel(['environment' => 'test']);
+        $container = static::getContainer();
 
-        $params = $this->createMock(ParameterBagInterface::class);
-        $params->method('get')
-            ->with('paths.house_csv')
-            ->willReturn($this->filePath);
+        $this->em = $container->get(EntityManagerInterface::class);
+        $this->repository = $container->get(HouseRepository::class);
 
-        $this->repository = new HouseRepository($params);
-        $this->house = new House( 'test1', 1, 'Test Address', 123455);
-        $this->house1 = new House('test2', 1, 'Test Address1', 123456,false);
+        $conn = $this->em->getConnection();
+        $platform = $conn->getDatabasePlatform();
+        $conn->executeStatement($platform->getTruncateTableSQL('house', true));
+
+        $this->house1 = new House(type: 'test1', beds: 2, address: 'Addr1', price: 100, free: true);
+        $this->house2 = new House(type: 'test2', beds: 3, address: 'Addr2', price: 200, free: false);
     }
 
-    public function testSave(): void
+    public function testSaveAndFindById(): void
     {
-        $id1 = $this->repository->save($this->house);
-        $id2 = $this->repository->save($this->house1);
+        $this->repository->save($this->house1 );
+        $this->assertNotNull($this->house1->getId());
 
-        $house1= $this->repository->findById($id1);
-        $house1->setBeds(10);
-        $this->repository->save($house1);
-
-        $houses = $this->repository->findAll();
-        $this->assertEquals('test1', $houses[0]->getType());
-
-        $this->assertEquals('test2', $houses[1]->getType());
-        $this->assertEquals('10', $houses[0]->getBeds());
+        $found = $this->repository->findById($this->house1->getId());
+        $this->assertInstanceOf(House::class, $found);
+        $this->assertSame('test1', $found->getType());
     }
 
-    public function testFindAll(): void
+    public function testFindAllAndFindAllFree(): void
     {
-        $id1 = $this->repository->save($this->house);
-        $id2 = $this->repository->save($this->house1);
-        $houses = $this->repository->findAll();
-        $this->assertCount(2, $houses);
+        $this->repository->save($this->house1);
+        $this->repository->save($this->house2);
+
+        $all = $this->repository->findAll();
+        $this->assertCount(2, $all);
+
+        $free = $this->repository->findAllFree();
+        $this->assertCount(1, $free);
+        $this->assertTrue($free[0]->getFree());
     }
 
-    public function testFindAllFree(): void
+    public function testUpdate(): void
     {
-        $id1 = $this->repository->save($this->house);
-        $id2 = $this->repository->save($this->house1);
-        $houses = $this->repository->findAllFree();
-        $this->assertCount(1, $houses);
-    }
+        $this->repository->save($this->house1);
 
-    public function testFindById(): void
-    {
+        $this->house1->setBeds(10);
+        $this->house1->setAddress('New');
+        $this->repository->save($this->house1);
 
-        $id1 = $this->repository->save($this->house);
-        $id2 = $this->repository->save($this->house1);
-
-        $house_id1 = $this->repository->findById($id1);
-        $house_id2 = $this->repository->findById($id2);
-
-        $this->assertNotNull($house_id1);
-        $this->assertNotNull($house_id2);
-        $this->assertEquals($id1, $house_id1->getId());
-        $this->assertEquals($id2, $house_id2->getId());
-
+        $reloaded = $this->repository->findById($this->house1->getId());
+        $this->assertSame(10, $reloaded->getBeds());
+        $this->assertSame('New', $reloaded->getAddress());
     }
 
     public function testDeleteById(): void
     {
+        $this->repository->save($this->house2);
 
-        $id1 = $this->repository->save($this->house);
-        $id2 = $this->repository->save($this->house1);
+        $id = $this->house2->getId();
+        $deleted = $this->repository->deleteById($id);
+        $this->assertTrue($deleted);
 
-        $this->repository->deleteById($id2);
-        $houses = $this->repository->findAll();
-        $house = $this->repository->findById($id2);
+        $this->assertNull($this->repository->findById($id));
+        $this->assertCount(0, $this->repository->findAll());
+    }
 
-        $this->assertNull($house);
-        $this->assertCount(1, $houses);
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $this->em->close();
     }
 }
