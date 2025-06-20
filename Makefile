@@ -48,14 +48,8 @@ fixtures:
 	$(CONSOLE) doctrine:fixtures:load --no-interaction
 
 ### TESTING ###
-test-house-repo:
-	$(EXEC_PHP) vendor/bin/phpunit tests/Repository/HouseRepositoryTest.php
-
 test-house-cont:
 	$(EXEC_PHP) vendor/bin/phpunit tests/Controller/HouseControllerTest.php
-
-test-booking-repo:
-	$(EXEC_PHP) vendor/bin/phpunit tests/Repository/BookingRepositoryTest.php
 
 test-booking-cont:
 	$(EXEC_PHP) vendor/bin/phpunit tests/Controller/BookingControllerTest.php

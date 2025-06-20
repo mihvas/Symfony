@@ -15,10 +15,6 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        echo "APP_ENV=", getenv('APP_ENV'), "\n";
-        echo "DATABASE_URL=", getenv('DATABASE_URL'), "\n";
-        $this->assertTrue(true);
-
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
         ], json_encode([
@@ -56,7 +52,7 @@ class BookingControllerTest extends WebTestCase
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $booking = $em->getRepository(Booking::class)->findOneById($id);
+        $booking = $em->getRepository(Booking::class)->findById($id);
 
         $this->assertNotNull($booking);
         $this->assertEquals($comment, $booking->getComment());
@@ -176,7 +172,7 @@ class BookingControllerTest extends WebTestCase
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $deleted = $em->getRepository(Booking::class)->findOneById($id);
+        $deleted = $em->getRepository(Booking::class)->findById($id);
 
         $this->assertNull($deleted);
     }

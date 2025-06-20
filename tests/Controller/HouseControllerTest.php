@@ -38,7 +38,7 @@ class HouseControllerTest extends WebTestCase
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $houseFromDb = $em->getRepository(House::class)->findOneById($id);
+        $houseFromDb = $em->getRepository(House::class)->findById($id);
 
         $this->assertNotNull($houseFromDb);
 
@@ -200,7 +200,7 @@ class HouseControllerTest extends WebTestCase
         $em = $client->getContainer()->get('doctrine')->getManager();
 
 
-        $houseFromDb = $em->getRepository(House::class)->findOneById($id);
+        $houseFromDb = $em->getRepository(House::class)->findById($id);
 
         $this->assertNull($houseFromDb);
     }
