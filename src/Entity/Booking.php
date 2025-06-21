@@ -1,8 +1,11 @@
 <?php
 
 namespace App\Entity;
+
+use App\Repository\BookingRepository;
 use Doctrine\ORM\Mapping as ORM;
-#[ORM\Entity]
+
+#[ORM\Entity(repositoryClass: BookingRepository::class)]
 #[ORM\Table(name: 'Booking')]
 class Booking
 {
@@ -11,26 +14,28 @@ class Booking
     #[ORM\Column(type: 'integer')]
     private int $id;
 
-    #[ORM\Column(type: 'string', length: 15)]
+    #[ORM\Column(type: 'string', length: 15, nullable: true)]
     private string $phone;
 
-    #[ORM\Column(type: 'integer',nullable: true)]
-    private int $houseId;
+    #[ORM\ManyToOne(targetEntity: House::class, inversedBy: 'bookings')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?House $house;
 
-    #[ORM\Column(type: 'string', length: 255)]
-    private string $comment;
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $comment;
 
     public function __construct(
-        string $phone,
-        int $houseId,
-        string $comment=null,
-        int $id = -1
+        string  $phone,
+        ?string $comment = null,
+        ?House  $house = null,
+        int     $id = -1
     )
     {
         $this->id = $id;
-        $this->houseId = $houseId;
+        $this->house = $house;
         $this->phone = $phone;
         $this->comment = $comment;
+
     }
 
     public function getId(): int
@@ -43,15 +48,16 @@ class Booking
         return $this->phone;
     }
 
-    public function getHouseId(): int
+    public function getHouse(): ?House
     {
-        return $this->houseId;
+        return $this->house;
     }
 
-    public function getComment(): string
+    public function getComment(): ?string
     {
         return $this->comment;
     }
+
 
     public function setId(int $id): void
     {
@@ -63,22 +69,26 @@ class Booking
         $this->phone = $phone;
     }
 
-    public function setComment(string $comment): void
+    public function setComment(?string $comment): void
     {
         $this->comment = $comment;
     }
 
-    public function setHouseId(int $houseId): void
+
+    public function setHouse(?House $house): self
     {
-        $this->houseId = $houseId;
+        $this->house = $house;
+
+        return $this;
     }
+
 
     public function toArray(): array
     {
         return [
             'id' => $this->id,
             'phone' => $this->phone,
-            'houseId' => $this->houseId,
+            'house' => $this->house,
             'comment' => $this->comment,
         ];
     }

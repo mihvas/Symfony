@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-
 use App\Service\HouseService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,9 +13,9 @@ class HouseController extends AbstractController
 {
     private HouseService $houseService;
 
-    public function __construct(HouseService $HouseService)
+    public function __construct(HouseService $houseService)
     {
-        $this->houseService = $HouseService;
+        $this->houseService = $houseService;
     }
 
     #[Route('/get', name: 'get', methods: ['GET'])]
@@ -25,12 +24,14 @@ class HouseController extends AbstractController
         $houses = $this->houseService->getAllHouses();
         return $this->json($houses);
     }
+
     #[Route('/get_free', name: 'get_free', methods: ['GET'])]
     public function getAllFreeHouses(): JsonResponse
     {
         $freeHouses = $this->houseService->getAllFreeHouses();
         return $this->json($freeHouses);
     }
+
     #[Route('/create', name: 'create', methods: ['POST'])]
     public function createHouse(Request $request): JsonResponse
     {
@@ -40,37 +41,34 @@ class HouseController extends AbstractController
         $beds = $data['beds'] ?? null;
         $address = $data['address'] ?? null;
         $price = $data['price'] ?? null;
+        $isFree = $data['free'] ?? true;
 
-        if (is_null($type) || is_null($beds) || is_null($address) || is_null($price)) {
-            http_response_code(400);
-            return $this->json(['error1' => 'Необходимы параметры type, beds, address, price'], 400);
+        if ($type===null || $beds===null  || $address===null  || $price===null ) {
+            return $this->json(['error' => 'Необходимы параметры type, beds, address, price'], 400);
         }
 
-        $id = $this->houseService->createHouse($type, $beds, $address, $price);
+        $id = $this->houseService->createHouse($type, $beds, $address, $price,$isFree);
 
-        return $this->json(['success' => true,'houseId' => $id]);
+        return $this->json(['success' => true, 'houseId' => $id]);
     }
+
 
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteHouse(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
-
         $id = $data['id'] ?? null;
 
         if (is_null($id)) {
-            http_response_code(400);
-            return $this->json(['error1' => 'Необходимы параметры id']);
+            return $this->json(['error' => 'Необходим параметр id'], 400);
         }
 
-        $isDelete= $this->houseService->deleteHouse((int)$id);
+        $isDeleted = $this->houseService->deleteHouse((int)$id);
 
-        if (!$isDelete) {
-            http_response_code(404);
-            return $this->json(['error2' => 'Не удалось найти запись с таким id']);
+        if (!$isDeleted) {
+            return $this->json(['error' => 'Не удалось найти запись с таким id'], 404);
         }
 
         return $this->json(['success' => true, 'message' => 'Запись удалена']);
     }
-
 }

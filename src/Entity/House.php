@@ -2,9 +2,12 @@
 
 namespace App\Entity;
 
+use App\Repository\HouseRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: HouseRepository::class)]
 #[ORM\Table(name: 'house')]
 class House
 {
@@ -16,16 +19,21 @@ class House
     #[ORM\Column(type: 'string', length: 255)]
     private string $type;
 
-    #[ORM\Column(type: 'int', nullable: true)]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private int $beds;
 
     #[ORM\Column(type: 'string', length: 255)]
     private string $address;
 
-    #[ORM\Column(type: 'int', nullable: true)]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private int $price;
-    #[ORM\Column(type: 'bool', nullable: true)]
+    #[ORM\Column(type: 'boolean', nullable: true)]
     private bool $free;
+
+
+
+    #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'house')]
+    private Collection $bookings;
 
     public function __construct(
         string $type,
@@ -108,8 +116,7 @@ class House
             'beds' => $this->beds,
             'address' => $this->address,
             'price' => $this->price,
-            'free' => $this->free,
-
+            'free' => $this->free
         ];
     }
 
