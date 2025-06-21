@@ -1,10 +1,11 @@
 <?php
 
+declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Booking;
 use App\Service\BookingService;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,18 +26,23 @@ class BookingController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        if (!is_array($data)) {
+            throw new RuntimeException('Invalid JSON response');
+        }
+
         $phone = $data['phone'] ?? null;
         $houseId = $data['houseId'] ?? null;
         $comment = $data['comment'] ?? null;
 
-        if ($phone===null || $houseId===null) {
+        if ($phone === null || $houseId === null) {
             return $this->json(['error' => 'Необходимы параметры phone и houseId'], 400);
         }
 
-        $bookingId = $this->bookingService->createBooking($phone,$houseId, $comment);
+        $bookingId = $this->bookingService->createBooking($phone, $houseId, $comment);
 
-        if ($bookingId===null) {
-            return $this->json(['error' => 'Не получилось забронировать домик. Проверьте правильность id и свободность данного домика.'], 400);
+        if ($bookingId === null) {
+            return $this->json(['error' => 'Не получилось забронировать домик. 
+            Проверьте правильность id и свободность данного домика.'], 400);
         }
 
         return $this->json([
@@ -49,6 +55,10 @@ class BookingController extends AbstractController
     public function updateBooking(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            throw new RuntimeException('Invalid JSON response');
+        }
 
         $id = $data['id'] ?? null;
         $newComment = $data['comment'] ?? null;
@@ -74,9 +84,14 @@ class BookingController extends AbstractController
     public function deleteBooking(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            throw new RuntimeException('Invalid JSON response');
+        }
+
         $id = $data['id'] ?? null;
 
-        if ($id===null) {
+        if ($id === null) {
             return $this->json(['error' => 'Необходим параметр id'], 400);
         }
 

@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\HouseRepository;
-use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: HouseRepository::class)]
 #[ORM\Table(name: 'house')]
@@ -30,8 +32,6 @@ class House
     #[ORM\Column(type: 'boolean', nullable: true)]
     private bool $free;
 
-
-
     #[ORM\OneToMany(targetEntity: Booking::class, mappedBy: 'house')]
     private Collection $bookings;
 
@@ -42,8 +42,8 @@ class House
         int $price,
         bool $free = true,
         int $id = -1
-    )
-    {
+    ) {
+        $this->bookings = new ArrayCollection();
         $this->id = $id;
         $this->type = $type;
         $this->beds = $beds;
@@ -60,7 +60,6 @@ class House
     public function getType(): string
     {
         return $this->type;
-
     }
 
     public function getBeds(): int
@@ -83,9 +82,19 @@ class House
         return $this->free;
     }
 
+    public function getBookings(): Collection
+    {
+        return $this->bookings;
+    }
+
     public function setId(int $id): void
     {
         $this->id = $id;
+    }
+
+    public function setType(string $type): void
+    {
+        $this->type = $type;
     }
 
     public function setPrice(int $price): void
@@ -119,5 +128,4 @@ class House
             'free' => $this->free
         ];
     }
-
 }

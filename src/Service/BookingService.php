@@ -1,11 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\Booking;
 use App\Repository\BookingRepository;
 use App\Repository\HouseRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use InvalidArgumentException;
 
 class BookingService
 {
@@ -14,26 +17,25 @@ class BookingService
     private EntityManagerInterface $entityManager;
 
     public function __construct(
-        BookingRepository      $repository,
-        HouseRepository        $houseRepository,
+        BookingRepository $repository,
+        HouseRepository $houseRepository,
         EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         $this->repository = $repository;
         $this->houseRepository = $houseRepository;
         $this->entityManager = $entityManager;
     }
 
-    public function createBooking(string $phone, int $houseId, string $comment): ?int
+    public function createBooking(string $phone, int $houseId, ?string $comment): ?int
     {
-        $house = $this->houseRepository->find($houseId);
+        $house = $this->houseRepository->findById($houseId);
 
         if (!$house || !$house->getFree()) {
             return null;
         }
 
         $house->setFree(false);
-        $booking = new Booking($phone,$comment);
+        $booking = new Booking($phone, $comment);
         $booking->setHouse($house);
 
         $this->entityManager->persist($booking);
@@ -44,7 +46,11 @@ class BookingService
 
     public function updateBooking(array $data): ?int
     {
-        $booking = $this->repository->find($data['id']);
+        if (!isset($data['id']) || !isset($data['comment'])) {
+            throw new InvalidArgumentException('Missing id');
+        }
+
+        $booking = $this->repository->findById($data['id']);
 
         if (!$booking) {
             return null;
@@ -59,7 +65,7 @@ class BookingService
 
     public function deleteBooking(int $id): bool
     {
-        $booking = $this->repository->find($id);
+        $booking = $this->repository->findById($id);
 
         if (!$booking) {
             return false;
@@ -80,7 +86,7 @@ class BookingService
     public function getAllBookings(): array
     {
         return array_map(
-            fn(Booking $booking) => $booking->toArray(),
+            fn (Booking $booking) => $booking->toArray(),
             $this->repository->findAll()
         );
     }

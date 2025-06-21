@@ -1,54 +1,71 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
-use App\Entity\House;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class BookingControllerTest extends WebTestCase
 {
-
-
     public function testCreateBooking(): void
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => 'test_booking_house1',
             'beds' => 2,
             'address' => 'address2',
             'price' => 200
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
-        $data = json_decode($content, true);
-        $houseId = $data['houseId'];
+        $this->assertNotFalse($content);
 
+        $data = json_decode($content, true);
+
+        $this->assertArrayHasKey('houseId', $data);
+        $houseId = $data['houseId'] ?? null;
+
+        $this->assertNotNull($houseId);
 
         $phone = '79999999999';
         $comment = 'Тестовое бронирование';
 
-        $client->request('POST', '/api/booking/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'phone' => $phone,
             'houseId' => $houseId,
             'comment' => $comment,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/booking/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
-        $id = $data['bookingId'];
+
+        $this->assertArrayHasKey('bookingId', $data);
+        $id = $data['bookingId'] ?? null;
+
+        $this->assertNotNull($id);
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
@@ -64,54 +81,81 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => 'test_booking_house2',
             'beds' => 2,
             'address' => 'address2',
             'price' => 200
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
 
-        $houseId = $data['houseId'];
+        $this->assertArrayHasKey('houseId', $data);
+        $houseId = $data['houseId'] ?? null;
 
-        $client->request('POST', '/api/booking/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $this->assertNotNull($houseId);
+
+        $json = json_encode([
             'phone' => '78888888888',
             'houseId' => $houseId,
             'comment' => 'Исходный комментарий',
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/booking/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
         $data = json_decode($content, true);
-        $bookingId = $data['bookingId'];
 
+        $this->assertArrayHasKey('bookingId', $data);
+        $bookingId = $data['bookingId'] ?? null;
+
+        $this->assertNotNull($bookingId);
 
         $newComment = 'Обновленный комментарий';
-        $client->request('PUT', '/api/booking/update', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+
+        $json = json_encode([
             'id' => $bookingId,
             'comment' => $newComment,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('PUT', '/api/booking/update', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
-        $id = $data['bookingId'];
+
+        $this->assertArrayHasKey('bookingId', $data);
+        $id = $data['bookingId'] ?? null;
+
+        $this->assertNotNull($id);
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
@@ -125,54 +169,76 @@ class BookingControllerTest extends WebTestCase
     {
         $client = static::createClient();
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => 'test_booking_house3',
             'beds' => 3,
             'address' => 'address3',
             'price' => 300
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
-        $data = json_decode($content, true);
-        $houseId = $data['houseId'];
+        $this->assertNotFalse($content);
 
-        $client->request('POST', '/api/booking/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $data = json_decode($content, true);
+
+        $this->assertArrayHasKey('houseId', $data);
+        $houseId = $data['houseId'] ?? null;
+
+        $this->assertNotNull($houseId);
+
+        $json = json_encode([
             'phone' => '77777777777',
             'houseId' => $houseId,
             'comment' => 'Комментарий на удаление',
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/booking/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
-        $data = json_decode($content, true);
-        $bookingId = $data['bookingId'];
+        $this->assertNotFalse($content);
 
+        $data = json_decode($content, true);
+
+        $this->assertArrayHasKey('bookingId', $data);
+        $bookingId = $data['bookingId'] ?? null;
+
+        $this->assertNotNull($bookingId);
+
+        $json = json_encode([
+            'id' => $bookingId,
+        ]);
+
+        $this->assertNotFalse($json);
 
         $client->request('DELETE', '/api/booking/delete', [], [], [
             'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
-            'id' => $bookingId,
-        ]));
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
-        $data = json_decode($content, true);
-        $id = $data['id'];
+        $this->assertNotFalse($content);
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
-        $deleted = $em->getRepository(Booking::class)->findById($id);
+        $deleted = $em->getRepository(Booking::class)->findById($bookingId);
 
         $this->assertNull($deleted);
     }

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<psalm
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://getpsalm.org/schema/config"
+        xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+        errorLevel="3"
+        resolveFromConfigFile="true"
+        cacheDirectory="var/cache/.psalm-cache"
+        ignoreInternalFunctionFalseReturn="false"
+        ignoreInternalFunctionNullReturn="false"
+        ensureArrayIntOffsetsExist="true"
+        ensureArrayStringOffsetsExist="true"
+        strictBinaryOperands="true"
+        restrictReturnTypes="true"
+        findUnusedPsalmSuppress="true"
+>
+    <projectFiles>
+        <directory name="src" />
+        <directory name="tests" />
+        <ignoreFiles>
+            <directory name="bin" />
+            <directory name="var" />
+            <directory name="vendor" />
+            <file name="config/preload.php" />
+            <file name="public/index.php" />
+            <file name='tests/bootstrap.php' />
+        </ignoreFiles>
+    </projectFiles>
+
+
+    <issueHandlers>
+        <UnusedClass errorLevel='suppress' />
+        <UnusedParam errorLevel='suppress' />
+        <PossiblyUnusedMethod errorLevel='suppress' />
+        <PossiblyUnusedProperty errorLevel='suppress' />
+    </issueHandlers>
+
+    <plugins>
+        <pluginClass class='Psalm\SymfonyPsalmPlugin\Plugin' />
+        <pluginClass class='Psalm\PhpUnitPlugin\Plugin' />
+        <pluginClass class='Orklah\PsalmInsaneComparison\Plugin' />
+    </plugins>
+</psalm>
+

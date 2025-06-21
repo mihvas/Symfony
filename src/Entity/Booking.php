@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Entity;
 
 use App\Repository\BookingRepository;
@@ -25,17 +27,15 @@ class Booking
     private ?string $comment;
 
     public function __construct(
-        string  $phone,
+        string $phone,
         ?string $comment = null,
-        ?House  $house = null,
-        int     $id = -1
-    )
-    {
+        ?House $house = null,
+        int $id = -1
+    ) {
         $this->id = $id;
         $this->house = $house;
         $this->phone = $phone;
         $this->comment = $comment;
-
     }
 
     public function getId(): int
@@ -58,7 +58,6 @@ class Booking
         return $this->comment;
     }
 
-
     public function setId(int $id): void
     {
         $this->id = $id;
@@ -74,14 +73,12 @@ class Booking
         $this->comment = $comment;
     }
 
-
     public function setHouse(?House $house): self
     {
         $this->house = $house;
 
         return $this;
     }
-
 
     public function toArray(): array
     {
@@ -92,6 +89,4 @@ class Booking
             'comment' => $this->comment,
         ];
     }
-
-
 }
