@@ -8,10 +8,26 @@ use App\Repository\HouseRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
+use OpenApi\Attributes as OA;
 
 #[ORM\Entity(repositoryClass: HouseRepository::class)]
 #[ORM\Table(name: 'house')]
-class House
+#[OA\Schema(
+    schema: 'House',
+    description: 'House entity schema',
+    required: ['id', 'type', 'beds', 'address', 'price', 'free'],
+    properties: [
+        new OA\Property(property: 'id', description: 'Unique identifier', type: 'integer', example: 1),
+        new OA\Property(property: 'type', description: 'Type of house', type: 'string', example: 'Cottage'),
+        new OA\Property(property: 'beds', description: 'Number of beds', type: 'integer', example: 3),
+        new OA\Property(property: 'address', description: 'Address of the house', type: 'string', example: '123 Main St'),
+        new OA\Property(property: 'price', description: 'Price per night', type: 'integer', example: 150),
+        new OA\Property(property: 'free', description: 'Whether the house is available', type: 'boolean', example: true)
+    ],
+    type: 'object'
+)]
+class House implements JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'AUTO')]
@@ -29,6 +45,7 @@ class House
 
     #[ORM\Column(type: 'integer', nullable: true)]
     private int $price;
+
     #[ORM\Column(type: 'boolean', nullable: true)]
     private bool $free;
 
@@ -127,5 +144,10 @@ class House
             'price' => $this->price,
             'free' => $this->free
         ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
