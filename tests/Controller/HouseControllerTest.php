@@ -5,13 +5,45 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\House;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class HouseControllerTest extends WebTestCase
 {
+    private function register(KernelBrowser $client): ?string
+    {
+        $phone = '79998887766';
+        $password = 'TestPass123';
+
+        $json = json_encode([
+            'phoneNumber' => $phone,
+            'password' => $password,
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/auth/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
+
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseFormatSame('json');
+
+        $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
+        $data = json_decode($content, true);
+        $this->assertArrayHasKey('token', $data);
+
+        $this->assertNotNull($data['token'] ?? null);
+
+        return $data['token'] ?? null;
+    }
+
     public function testCreateHouse(): void
     {
         $client = static::createClient();
+        $token = $this->register($client);
 
         $type = 'test house1';
         $beds = 2;
@@ -29,6 +61,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -62,6 +95,7 @@ class HouseControllerTest extends WebTestCase
     public function testGetAllHouses(): void
     {
         $client = static::createClient();
+        $token = $this->register($client);
 
         $type = 'test house2';
         $beds = 2;
@@ -79,6 +113,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -93,7 +128,11 @@ class HouseControllerTest extends WebTestCase
 
         $this->assertNotNull($id);
 
-        $client->request('GET', '/api/house/get');
+        $client->request('GET', '/api/house/get', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
+            ]);
+
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
@@ -117,6 +156,7 @@ class HouseControllerTest extends WebTestCase
     public function testGetAllFreeHouses(): void
     {
         $client = static::createClient();
+        $token = $this->register($client);
 
         $type = 'test house3';
         $beds = 3;
@@ -139,6 +179,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -165,6 +206,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -179,7 +221,11 @@ class HouseControllerTest extends WebTestCase
 
         $this->assertNotNull($id1);
 
-        $client->request('GET', '/api/house/get_free');
+        $client->request('GET', '/api/house/get_free', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
+        ]);
+
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
@@ -202,6 +248,7 @@ class HouseControllerTest extends WebTestCase
     public function testDeleteHouse(): void
     {
         $client = static::createClient();
+        $token = $this->register($client);
 
         $type = 'test delete';
         $beds = 2;
@@ -219,6 +266,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -245,6 +293,7 @@ class HouseControllerTest extends WebTestCase
 
         $client->request('DELETE', '/api/house/delete', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();

@@ -54,6 +54,9 @@ test-house-cont:
 test-booking-cont:
 	$(EXEC_PHP) vendor/bin/phpunit tests/Controller/BookingControllerTest.php
 
+test-auth-cont:
+	$(EXEC_PHP) vendor/bin/phpunit tests/Controller/AuthControllerTest.php
+
 ### XDEBUG ###
 xdebug-status:
 	$(XDEBUG) status

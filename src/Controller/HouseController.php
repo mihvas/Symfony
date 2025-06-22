@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\HouseService;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,12 @@ class HouseController extends AbstractController
     #[Route('/get', name: 'get', methods: ['GET'])]
     public function getAllHouses(): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $houses = $this->houseService->getAllHouses();
         return $this->json($houses);
     }
@@ -31,6 +38,12 @@ class HouseController extends AbstractController
     #[Route('/get_free', name: 'get_free', methods: ['GET'])]
     public function getAllFreeHouses(): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $freeHouses = $this->houseService->getAllFreeHouses();
         return $this->json($freeHouses);
     }
@@ -38,6 +51,12 @@ class HouseController extends AbstractController
     #[Route('/create', name: 'create', methods: ['POST'])]
     public function createHouse(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {
@@ -50,7 +69,7 @@ class HouseController extends AbstractController
         $price = $data['price'] ?? null;
         $isFree = $data['free'] ?? true;
 
-        if ($type === null || $beds === null  || $address === null  || $price === null) {
+        if ($type === null || $beds === null || $address === null || $price === null) {
             return $this->json(['error' => 'Необходимы параметры type, beds, address, price'], 400);
         }
 
@@ -62,6 +81,12 @@ class HouseController extends AbstractController
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteHouse(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {

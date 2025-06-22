@@ -5,13 +5,46 @@ declare(strict_types=1);
 namespace App\Tests\Controller;
 
 use App\Entity\Booking;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 class BookingControllerTest extends WebTestCase
 {
+    private function register(KernelBrowser $client, string $phone): ?string
+    {
+        $password = 'TestPass123';
+
+        $json = json_encode([
+            'phoneNumber' => $phone,
+            'password' => $password,
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/auth/register', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
+
+        $this->assertResponseIsSuccessful();
+        $this->assertResponseFormatSame('json');
+
+        $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
+        $data = json_decode($content, true);
+        $this->assertArrayHasKey('token', $data);
+
+        $this->assertNotNull($data['token'] ?? null);
+
+        return $data['token'] ?? null;
+    }
+
     public function testCreateBooking(): void
     {
         $client = static::createClient();
+        $phone = '79999999999';
+
+        $token = $this->register($client, $phone);
 
         $json = json_encode([
             'type' => 'test_booking_house1',
@@ -24,6 +57,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -39,7 +73,6 @@ class BookingControllerTest extends WebTestCase
 
         $this->assertNotNull($houseId);
 
-        $phone = '79999999999';
         $comment = 'Тестовое бронирование';
 
         $json = json_encode([
@@ -52,6 +85,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/booking/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -80,6 +114,9 @@ class BookingControllerTest extends WebTestCase
     public function testUpdateBooking(): void
     {
         $client = static::createClient();
+        $phone = '78888888888';
+
+        $token = $this->register($client, $phone);
 
         $json = json_encode([
             'type' => 'test_booking_house2',
@@ -92,6 +129,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -108,7 +146,7 @@ class BookingControllerTest extends WebTestCase
         $this->assertNotNull($houseId);
 
         $json = json_encode([
-            'phone' => '78888888888',
+            'phone' => $phone,
             'houseId' => $houseId,
             'comment' => 'Исходный комментарий',
         ]);
@@ -117,6 +155,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/booking/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -142,6 +181,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('PUT', '/api/booking/update', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -168,6 +208,9 @@ class BookingControllerTest extends WebTestCase
     public function testDeleteBooking(): void
     {
         $client = static::createClient();
+        $phone = '77777777777';
+
+        $token = $this->register($client, $phone);
 
         $json = json_encode([
             'type' => 'test_booking_house3',
@@ -180,6 +223,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/house/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -196,7 +240,7 @@ class BookingControllerTest extends WebTestCase
         $this->assertNotNull($houseId);
 
         $json = json_encode([
-            'phone' => '77777777777',
+            'phone' => $phone,
             'houseId' => $houseId,
             'comment' => 'Комментарий на удаление',
         ]);
@@ -205,6 +249,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('POST', '/api/booking/create', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
@@ -228,6 +273,7 @@ class BookingControllerTest extends WebTestCase
 
         $client->request('DELETE', '/api/booking/delete', [], [], [
             'CONTENT_TYPE' => 'application/json',
+            'HTTP_Authorization' => 'Bearer ' . $token,
         ], $json);
 
         $this->assertResponseIsSuccessful();
