@@ -65,3 +65,19 @@ xdebug-enable:
 xdebug-disable:
 	$(XDEBUG) disable
 	$(XDEBUG) status
+
+### CODE ANALYSIS ###
+phpcs:
+	$(EXEC_PHP) ./vendor/bin/phpcs --standard=phpcs.xml src tests
+
+phpcbf:
+	$(EXEC_PHP) ./vendor/bin/phpcbf --standard=phpcs.xml src tests
+
+php-cs-fix-diff:
+	$(EXEC_PHP) ./vendor/bin/php-cs-fixer fix --allow-risky=yes --dry-run --diff
+
+php-cs-fix:
+	$(EXEC_PHP) ./vendor/bin/php-cs-fixer fix --allow-risky=yes
+
+psalm:
+	$(EXEC_PHP) ./vendor/bin/psalm

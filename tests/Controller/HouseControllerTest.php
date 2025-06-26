@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Tests\Controller;
 
 use App\Entity\House;
@@ -16,25 +18,34 @@ class HouseControllerTest extends WebTestCase
         $address = 'test address';
         $price = 500;
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => $type,
             'beds' => $beds,
             'address' => $address,
             'price' => $price,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
+
         $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
+        $this->assertTrue($data['success'] ?? false);
         $this->assertArrayHasKey('houseId', $data);
 
-        $id = $data['houseId'];
+        $id = $data['houseId'] ?? null;
+
+        $this->assertNotNull($id);
 
         $em = $client->getContainer()->get('doctrine')->getManager();
 
@@ -42,11 +53,10 @@ class HouseControllerTest extends WebTestCase
 
         $this->assertNotNull($houseFromDb);
 
-        $this->assertEquals($type, $houseFromDb->getType(),'Тип отсутствует');
-        $this->assertEquals($beds, $houseFromDb->getBeds(),'Количество кроватей отсутствует');
-        $this->assertEquals($address, $houseFromDb->getAddress(),'Адрес отсутствует');
-        $this->assertEquals($price, $houseFromDb->getPrice(),'Цена отсутствует');
-
+        $this->assertEquals($type, $houseFromDb->getType(), 'Тип отсутствует');
+        $this->assertEquals($beds, $houseFromDb->getBeds(), 'Количество кроватей отсутствует');
+        $this->assertEquals($address, $houseFromDb->getAddress(), 'Адрес отсутствует');
+        $this->assertEquals($price, $houseFromDb->getPrice(), 'Цена отсутствует');
     }
 
     public function testGetAllHouses(): void
@@ -58,26 +68,37 @@ class HouseControllerTest extends WebTestCase
         $address = 'test address';
         $price = 100;
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => $type,
             'beds' => $beds,
             'address' => $address,
             'price' => $price,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
-        $id = $data['houseId'];
+        $this->assertArrayHasKey('houseId', $data);
+
+        $id = $data['houseId'] ?? null;
+
+        $this->assertNotNull($id);
 
         $client->request('GET', '/api/house/get');
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
         $data = json_decode($content, true);
 
         $this->assertIsArray($data);
@@ -107,42 +128,63 @@ class HouseControllerTest extends WebTestCase
         $address1 = 'test address';
         $price1 = 200;
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => $type,
             'beds' => $beds,
             'address' => $address,
             'price' => $price,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
         $content = $client->getResponse()->getContent();
-        $data = json_decode($content, true);
-        $id = $data['houseId'];
+        $this->assertNotFalse($content);
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $data = json_decode($content, true);
+
+        $this->assertArrayHasKey('houseId', $data);
+        $id = $data['houseId'] ?? null;
+
+        $this->assertNotNull($id);
+
+        $json = json_encode([
             'type' => $type1,
             'beds' => $beds1,
             'address' => $address1,
             'price' => $price1,
             'free' => false,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
-        $id1 = $data['houseId'];
+
+        $this->assertArrayHasKey('houseId', $data);
+        $id1 = $data['houseId'] ?? null;
+
+        $this->assertNotNull($id1);
 
         $client->request('GET', '/api/house/get_free');
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
         $data = json_decode($content, true);
 
         $this->assertIsArray($data);
@@ -153,7 +195,7 @@ class HouseControllerTest extends WebTestCase
             $this->assertArrayHasKey('address', $house);
             $this->assertArrayHasKey('price', $house);
             $this->assertArrayHasKey('free', $house);
-            $this->assertTrue($house['free']);
+            $this->assertTrue($house['free'] ?? false);
         }
     }
 
@@ -166,39 +208,56 @@ class HouseControllerTest extends WebTestCase
         $address = 'test address';
         $price = 300;
 
-        $client->request('POST', '/api/house/create', [], [], [
-            'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
+        $json = json_encode([
             'type' => $type,
             'beds' => $beds,
             'address' => $address,
             'price' => $price,
-        ]));
+        ]);
+
+        $this->assertNotFalse($json);
+
+        $client->request('POST', '/api/house/create', [], [], [
+            'CONTENT_TYPE' => 'application/json',
+        ], $json);
+
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
 
         $content = $client->getResponse()->getContent();
+        $this->assertNotFalse($content);
+
         $data = json_decode($content, true);
+
         $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
-        $id = $data['houseId'];
+        $this->assertTrue($data['success'] ?? false);
+        $this->assertArrayHasKey('houseId', $data);
+
+        $id = $data['houseId'] ?? null;
+
+        $this->assertNotNull($id);
+
+        $json = json_encode([
+            'id' => $id,
+        ]);
+
+        $this->assertNotFalse($json);
 
         $client->request('DELETE', '/api/house/delete', [], [], [
             'CONTENT_TYPE' => 'application/json',
-        ], json_encode([
-            'id' => $id,
-        ]));
+        ], $json);
 
         $this->assertResponseIsSuccessful();
         $this->assertResponseFormatSame('json');
         $content = $client->getResponse()->getContent();
+
+        $this->assertNotFalse($content);
         $data = json_decode($content, true);
 
         $this->assertArrayHasKey('success', $data);
-        $this->assertTrue($data['success']);
+        $this->assertTrue($data['success'] ?? false);
 
         $em = $client->getContainer()->get('doctrine')->getManager();
-
 
         $houseFromDb = $em->getRepository(House::class)->findById($id);
 

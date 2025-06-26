@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Controller;
 
 use App\Service\HouseService;
+use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,26 +40,34 @@ class HouseController extends AbstractController
     {
         $data = json_decode($request->getContent(), true);
 
+        if (!is_array($data)) {
+            throw new RuntimeException('Invalid JSON response');
+        }
+
         $type = $data['type'] ?? null;
         $beds = $data['beds'] ?? null;
         $address = $data['address'] ?? null;
         $price = $data['price'] ?? null;
         $isFree = $data['free'] ?? true;
 
-        if ($type===null || $beds===null  || $address===null  || $price===null ) {
+        if ($type === null || $beds === null  || $address === null  || $price === null) {
             return $this->json(['error' => 'Необходимы параметры type, beds, address, price'], 400);
         }
 
-        $id = $this->houseService->createHouse($type, $beds, $address, $price,$isFree);
+        $id = $this->houseService->createHouse($type, $beds, $address, $price, $isFree);
 
         return $this->json(['success' => true, 'houseId' => $id]);
     }
-
 
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteHouse(Request $request): JsonResponse
     {
         $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            throw new RuntimeException('Invalid JSON response');
+        }
+
         $id = $data['id'] ?? null;
 
         if (is_null($id)) {

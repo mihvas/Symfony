@@ -1,9 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Service;
 
 use App\Entity\House;
 use App\Repository\HouseRepository;
+use InvalidArgumentException;
 
 class HouseService
 {
@@ -14,7 +17,7 @@ class HouseService
         $this->repository = $repository;
     }
 
-    public function createHouse(string $type, int $beds, string $address, float $price, bool $isFree = true): int
+    public function createHouse(string $type, int $beds, string $address, int $price, bool $isFree = true): int
     {
         $house = new House($type, $beds, $address, $price, $isFree);
         $this->repository->save($house);
@@ -23,10 +26,14 @@ class HouseService
 
     public function updateHouse(array $data): int
     {
-        $house = $this->repository->find($data['id']);
+        if (!isset($data['id'], $data['type'], $data['beds'], $data['address'], $data['price'], $data['isFree'])) {
+            throw new InvalidArgumentException('Missing parameters');
+        }
+
+        $house = $this->repository->findById($data['id']);
 
         if (!$house) {
-            throw new \InvalidArgumentException("House with ID {$data['id']} not found.");
+            throw new InvalidArgumentException("House with ID {$data['id']} not found.");
         }
 
         $house->setType($data['type']);
@@ -46,12 +53,12 @@ class HouseService
 
     public function getAllHouses(): array
     {
-        return array_map(fn(House $house) => $house->toArray(), $this->repository->findAll());
+        return array_map(fn (House $house) => $house->toArray(), $this->repository->findAll());
     }
 
     public function getAllFreeHouses(): array
     {
-        return array_map(fn(House $house) => $house->toArray(), $this->repository->findAllFree());
+        return array_map(fn (House $house) => $house->toArray(), $this->repository->findAllFree());
     }
 
     public function findHouseById(int $id): ?array

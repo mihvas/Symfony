@@ -1,11 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Repository;
 
 use App\Entity\House;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
-use Cake\Chronos\Chronos;
 
 /**
  * @extends ServiceEntityRepository<House>
@@ -34,9 +35,7 @@ class HouseRepository extends ServiceEntityRepository
         $entityManager = $this->getEntityManager();
         $entityManager->persist($house);
         $entityManager->flush();
-
     }
-
 
     public function deleteById(int $id, bool $flush = true): bool
     {
