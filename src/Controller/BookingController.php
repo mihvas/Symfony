@@ -41,8 +41,9 @@ class BookingController extends AbstractController
         $bookingId = $this->bookingService->createBooking($phone, $houseId, $comment);
 
         if ($bookingId === null) {
-            return $this->json(['error' => 'Не получилось забронировать домик. 
-            Проверьте правильность id и свободность данного домика.'], 400);
+            return $this->json([
+                'error' => 'Не получилось забронировать домик. Проверьте правильность id и свободность данного домика.'
+            ], 400);
         }
 
         return $this->json([

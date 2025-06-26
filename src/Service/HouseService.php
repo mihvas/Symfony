@@ -26,10 +26,7 @@ class HouseService
 
     public function updateHouse(array $data): int
     {
-        if (
-            !isset($data['id']) || !isset($data['type']) || !isset($data['beds']) || !isset($data['address']) ||
-            !isset($data['price']) || !isset($data['isFree'])
-        ) {
+        if (!isset($data['id'], $data['type'], $data['beds'], $data['address'], $data['price'], $data['isFree'])) {
             throw new InvalidArgumentException('Missing parameters');
         }
 
