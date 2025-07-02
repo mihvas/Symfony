@@ -47,7 +47,7 @@ class BookingService
     public function updateBooking(array $data): ?int
     {
         if (!isset($data['id']) || !isset($data['comment'])) {
-            throw new InvalidArgumentException('Missing id');
+            throw new InvalidArgumentException('Missing param');
         }
 
         $booking = $this->repository->findById($data['id']);

@@ -1,0 +1,41 @@
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: phone_number
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        login:
+            pattern: ^/api/auth/login
+            stateless: true
+            json_login:
+                check_path: /api/auth/login
+                username_path: phoneNumber
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~
+            refresh_jwt:
+                check_path: /api/token/refresh
+            entry_point: jwt
+    access_control:
+        - {
+            path: ^/api/auth/(register|login|logout|token/refresh),
+            roles: PUBLIC_ACCESS,
+        }
+        - { path: ^/api/auth/profile, roles: ROLE_USER }
+        - { path: ^/api/booking/(create|update|delete), roles: ROLE_USER }
+        - { path: ^/api/house/(get|get_free|create|delete), roles: ROLE_USER }
+        # - { path: ^/admin, roles: ROLE_ADMIN }

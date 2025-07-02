@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Entity\User;
 use App\Service\BookingService;
 use RuntimeException;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,13 +25,19 @@ class BookingController extends AbstractController
     #[Route('/create', name: 'create', methods: ['POST'])]
     public function createBooking(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {
             throw new RuntimeException('Invalid JSON response');
         }
 
-        $phone = $data['phone'] ?? null;
+        $phone = $user->getPhoneNumber();
         $houseId = $data['houseId'] ?? null;
         $comment = $data['comment'] ?? null;
 
@@ -55,6 +62,12 @@ class BookingController extends AbstractController
     #[Route('/update', name: 'update', methods: ['PUT'])]
     public function updateBooking(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {
@@ -84,6 +97,12 @@ class BookingController extends AbstractController
     #[Route('/delete', name: 'delete', methods: ['DELETE'])]
     public function deleteBooking(Request $request): JsonResponse
     {
+        $user = $this->getUser();
+
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'user not authenticated'], 401);
+        }
+
         $data = json_decode($request->getContent(), true);
 
         if (!is_array($data)) {
