@@ -6,10 +6,24 @@ namespace App\Entity;
 
 use App\Repository\BookingRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
+use OpenApi\Attributes as OA;
 
 #[ORM\Entity(repositoryClass: BookingRepository::class)]
 #[ORM\Table(name: 'Booking')]
-class Booking
+#[OA\Schema(
+    schema: 'Booking',
+    description: 'Booking entity schema',
+    required: ['id', 'phone', 'house'],
+    properties: [
+        new OA\Property(property: 'id', description: 'Unique identifier', type: 'integer', example: 1),
+        new OA\Property(property: 'phone', description: 'Phone number of the person booking', type: 'string', example: '+1234567890'),
+        new OA\Property(property: 'house', ref: '#/components/schemas/House'),
+        new OA\Property(property: 'comment', description: 'Optional comment', type: 'string', nullable: true, example: 'Near the lake')
+    ],
+    type: 'object'
+)]
+class Booking implements JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue(strategy: 'AUTO')]
@@ -85,8 +99,13 @@ class Booking
         return [
             'id' => $this->id,
             'phone' => $this->phone,
-            'house' => $this->house,
+            'house' => $this->house instanceof JsonSerializable ? $this->house->jsonSerialize() : null,
             'comment' => $this->comment,
         ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }

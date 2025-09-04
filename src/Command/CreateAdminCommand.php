@@ -16,7 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Throwable;
 
-#[AsCommand(name: 'app:create:admin', description: 'Creates a new admin user',)]
+#[AsCommand(name: 'app:create:admin', description: 'Creates a new admin user', )]
 class CreateAdminCommand extends Command
 {
     public function __construct(

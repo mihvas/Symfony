@@ -1,0 +1,105 @@
+nelmio_api_doc:
+    documentation:
+        info:
+            title: My API
+            description: This is the API documentation.
+            version: 1.0.0
+        components:
+            securitySchemes:
+                bearerAuth:
+                    type: http
+                    scheme: bearer
+                    bearerFormat: JWT
+        security:
+            - bearerAuth: [ ]
+
+        paths:
+            /api/auth/login:
+                post:
+                    tags: [Authentication]
+                    summary: Authenticate and get a JWT token
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required: [phoneNumber, password]
+                                    properties:
+                                        phoneNumber:
+                                            type: string
+                                            example: "+1234567890"
+                                        password:
+                                            type: string
+                                            example: "strongPassword123"
+                    responses:
+                        '200':
+                            description: Successful authentication
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            token:
+                                                type: string
+                                                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                                            refresh_token:
+                                                type: string
+                                                example: "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+                        '401':
+                            description: Invalid credentials
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            code:
+                                                type: integer
+                                                example: 401
+                                            message:
+                                                type: string
+                                                example: "Invalid credentials."
+
+            /api/auth/token/refresh:
+                post:
+                    tags: [Authentication]
+                    summary: Refresh JWT token using a refresh token
+                    requestBody:
+                        required: true
+                        content:
+                            application/json:
+                                schema:
+                                    type: object
+                                    required: [refresh_token]
+                                    properties:
+                                        refresh_token:
+                                            type: string
+                                            example: "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+                    responses:
+                        '200':
+                            description: Token successfully refreshed
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            token:
+                                                type: string
+                                                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                        '401':
+                            description: Invalid refresh token
+                            content:
+                                application/json:
+                                    schema:
+                                        type: object
+                                        properties:
+                                            code:
+                                                type: integer
+                                                example: 401
+                                            message:
+                                                type: string
+                                                example: "Invalid refresh token."
+    areas:
+        default:
+            path_patterns:
+                - ^/api/(?!doc)

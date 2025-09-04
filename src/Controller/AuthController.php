@@ -11,10 +11,11 @@ use Exception;
 use Gesdinet\JWTRefreshTokenBundle\Entity\RefreshToken;
 use Gesdinet\JWTRefreshTokenBundle\Model\RefreshTokenManagerInterface;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 
 #[Route('/api/auth', name: 'api_auth_')]
 class AuthController extends AbstractController
@@ -26,6 +27,35 @@ class AuthController extends AbstractController
     ) {
     }
 
+    #[OA\Post(
+        path: '/api/auth/register',
+        summary: 'Register a new user',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['phoneNumber', 'password'],
+                properties: [
+                    new OA\Property(property: 'phoneNumber', type: 'string', example: '+1234567890'),
+                    new OA\Property(property: 'password', type: 'string', example: 'strongPassword123'),
+                ]
+            )
+        ),
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'User registered and tokens issued',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'token', type: 'string', example: 'jwt.token.here'),
+                        new OA\Property(property: 'refreshToken', type: 'string', example: 'refresh.token.here'),
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Missing required fields'),
+            new OA\Response(response: 500, description: 'Server error during registration'),
+        ]
+    )]
     #[Route('/register', name: 'register', methods: ['POST'])]
     public function register(Request $request): JsonResponse
     {
@@ -57,6 +87,26 @@ class AuthController extends AbstractController
         }
     }
 
+    #[OA\Get(
+        path: '/api/auth/profile',
+        summary: 'Get authenticated user profile',
+        security: [['bearerAuth' => []]],
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'User profile',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(property: 'id', type: 'integer', example: 1),
+                        new OA\Property(property: 'phoneNumber', type: 'string', example: '+1234567890'),
+                        new OA\Property(property: 'roles', type: 'array', items: new OA\Items(type: 'string'), example: ['ROLE_USER']),
+                    ]
+                )
+            ),
+            new OA\Response(response: 401, description: 'Not authenticated'),
+        ]
+    )]
     #[Route('/profile', name: 'profile', methods: ['GET'])]
     public function profile(): JsonResponse
     {
@@ -73,6 +123,30 @@ class AuthController extends AbstractController
         ]);
     }
 
+    #[OA\Post(
+        path: '/api/auth/logout',
+        summary: 'Logout user and revoke refresh token',
+        security: [['bearerAuth' => []]],
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                required: ['refreshToken'],
+                properties: [
+                    new OA\Property(property: 'refreshToken', type: 'string', example: 'refresh.token.here'),
+                ]
+            )
+        ),
+        tags: ['Authentication'],
+        responses: [
+            new OA\Response(response: 200, description: 'Logout successful', content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(property: 'success', type: 'boolean', example: true),
+                ]
+            )),
+            new OA\Response(response: 400, description: 'Missing or invalid refresh token'),
+            new OA\Response(response: 500, description: 'Server error during logout'),
+        ]
+    )]
     #[Route('/logout', name: 'logout', methods: ['POST'])]
     public function logout(Request $request): JsonResponse
     {

@@ -6,7 +6,9 @@ namespace App\Entity;
 
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
+use JsonSerializable;
 use LogicException;
+use OpenApi\Attributes as OA;
 use Override;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -14,7 +16,25 @@ use Symfony\Component\Security\Core\User\UserInterface;
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PHONE_NUMBER', fields: ['phone_number'])]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+#[OA\Schema(
+    schema: 'User',
+    description: 'User entity schema',
+    required: ['id', 'phone_number', 'roles', 'password'],
+    properties: [
+        new OA\Property(property: 'id', description: 'Unique identifier', type: 'integer', example: 1),
+        new OA\Property(property: 'phone_number', description: 'User phone number (login identifier)', type: 'string', example: '+1234567890'),
+        new OA\Property(
+            property: 'roles',
+            description: 'Array of user roles',
+            type: 'array',
+            items: new OA\Items(type: 'string'),
+            example: ['ROLE_USER', 'ROLE_ADMIN']
+        ),
+        new OA\Property(property: 'password', description: 'Hashed password', type: 'string', example: '$2y$13$...'),
+    ],
+    type: 'object'
+)]
+class User implements UserInterface, PasswordAuthenticatedUserInterface, JsonSerializable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -31,14 +51,33 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private array $roles = [];
 
     /**
-     * @var string The hashed password
+     * @var string|null The hashed password
      */
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?string $password = null;
+
+    public function __construct(
+        ?string $phone_number = null,
+        array $roles = [],
+        ?string $password = null,
+        ?int $id = null
+    ) {
+        $this->id = $id;
+        $this->phone_number = $phone_number;
+        $this->roles = $roles;
+        $this->password = $password;
+    }
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(?int $id): static
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getPhoneNumber(): ?string
@@ -116,5 +155,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         // If you store any temporary, sensitive data on the user, clear it here
         // $this->plainPassword = null;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'phone_number' => $this->phone_number,
+            'roles' => $this->getRoles(),
+            'password' => $this->password,
+        ];
+    }
+
+    public function jsonSerialize(): array
+    {
+        return $this->toArray();
     }
 }
